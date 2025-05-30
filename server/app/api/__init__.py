@@ -1,6 +1,6 @@
 from flask import Blueprint
-from .test_routes import test_routes
+from app.api.auth_api import auth
 
 api = Blueprint('api', __name__, url_prefix='/api')
 
-api.register_blueprint(test_routes, url_prefix='/test')
+api.register_blueprint(auth, url_prefix='/auth')

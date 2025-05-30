@@ -12,6 +12,7 @@ dotenv = "==0.9.9"
 flask-cors = "==6.0.0"
 pydantic = {extras = ["email"], version = "*"}
 psycopg2 = "==2.9.10"
+flask-bcrypt = "==1.0.1"
 
 [dev-packages]
 
