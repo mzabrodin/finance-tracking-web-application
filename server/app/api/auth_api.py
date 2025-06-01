@@ -5,7 +5,8 @@ from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.models.user_model import User
-from app.schemas.user_schemas import UserRegisterSchema, UserLoginSchema, UserPasswordUpdateSchema
+from app.schemas.user_schemas import UserRegisterSchema, UserLoginSchema, UserChangePasswordSchema
+from app.utils.decorators import logged_in_required
 from app.utils.extensions import db, jwt
 from app.utils.responses import create_response
 
@@ -27,12 +28,30 @@ def register():
     try:
         validated_data = UserRegisterSchema(**data)
     except ValidationError as e:
-        return create_response(400, 'Invalid input', details=e.errors())
+        return create_response(
+            status_code=400,
+            message='Invalid input',
+            details=e.errors()
+        )
+    except Exception as e:
+        return create_response(
+            status_code=500,
+            message='Internal server error',
+            details=str(e)
+        )
 
     existing_user = User.query.filter(
         (User.email == validated_data.email) | (User.username == validated_data.username)).first()
-    if existing_user:
-        return create_response(400, 'User with this email or username already exists')
+    if existing_user.email == validated_data.email:
+        return create_response(
+            status_code=400,
+            message='User with this email already exists'
+        )
+    if existing_user.username == validated_data.username:
+        return create_response(
+            status_code=400,
+            message='User with this username already exists'
+        )
 
     try:
         user = User(
@@ -45,9 +64,17 @@ def register():
         db.session.commit()
     except SQLAlchemyError as e:
         db.session.rollback()
-        return create_response(500, 'Database error', details=e)
+        return create_response(
+            status_code=500,
+            message='Database error',
+            details=str(e)
+        )
 
-    return create_response(201, 'User registered successfully', data=user.to_dict())
+    return create_response(
+        status_code=201,
+        message='User registered successfully',
+        data=user.to_dict()
+    )
 
 
 @auth.route('/login', methods=('POST',))
@@ -57,15 +84,30 @@ def login():
     try:
         validated_data = UserLoginSchema(**data)
     except ValidationError as e:
-        return create_response(400, 'Invalid input', details=str(e))
+        return create_response(
+            status_code=400,
+            message='Invalid input',
+            details=e.errors()
+        )
+    except Exception as e:
+        return create_response(
+            status_code=500,
+            message='Internal server error',
+            details=str(e)
+        )
 
     user = User.query.filter_by(email=validated_data.email).first()
     if not user or not user.check_password(validated_data.password):
-        return create_response(401, 'Invalid email or password')
+        return create_response(
+            status_code=401,
+            message='Invalid email or password'
+        )
 
     access_token = create_access_token(identity=str(user.id))
     response = make_response(create_response(
-        200, 'Login successful', data=user.to_dict()
+        status_code=200,
+        message='Login successful',
+        data=user.to_dict()
     ))
     set_access_cookies(response, access_token)
 
@@ -73,52 +115,60 @@ def login():
 
 
 @auth.route('/logout', methods=('POST',))
-@jwt_required()
+@logged_in_required
 def logout():
-    response = make_response(create_response(200, 'Logout successful'))
+    response = make_response(create_response(
+        status_code=200,
+        message='Logout successful')
+    )
     unset_jwt_cookies(response)
     return response
 
 
-@auth.route('/me', methods=('GET',))
-@jwt_required()
-def get_current_user():
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-    if not user:
-        response = make_response(create_response(404, 'User not found'))
-        unset_jwt_cookies(response)
-        return response
-
-    claims = get_jwt()
-    user_type = claims.get('user_type', None)
-    if user.type == user_type:
-        return create_response(200, 'User retrieved successfully', data=user.to_dict())
-    else:
-        response = make_response(create_response(403, 'Forbidden: User type mismatch'))
-        unset_jwt_cookies(response)
-        return response
-
-
 @auth.route('/change_password', methods=('POST',))
-@jwt_required()
+@logged_in_required
 def change_password():
     user_id = get_jwt_identity()
     user = User.query.get(user_id)
     if not user:
-        return create_response(404, 'User not found')
+        return create_response(
+            status_code=404,
+            message='User not found'
+        )
 
     data = request.get_json()
     try:
-        validated_data = UserPasswordUpdateSchema(**data)
+        validated_data = UserChangePasswordSchema(**data)
     except ValidationError as e:
-        return create_response(400, 'Invalid input', details=str(e))
+        return create_response(
+            status_code=400,
+            message='Invalid input',
+            details=e.errors())
+    except Exception as e:
+        return create_response(
+            status_code=500,
+            message='Internal server error',
+            details=str(e)
+        )
+
+    if not user.check_password(validated_data.new_password):
+        return create_response(
+            status_code=400,
+            message='New password cannot be the same as the old password'
+        )
 
     try:
-        user.set_password(validated_data.password)
+        user.set_password(validated_data.new_password)
         db.session.commit()
     except SQLAlchemyError as e:
         db.session.rollback()
-        return create_response(500, 'Database error', details=str(e))
+        return create_response(
+            status_code=500,
+            message='Database error',
+            details=str(e)
+        )
 
-    return create_response(200, 'Password changed successfully')
+    return create_response(
+        status_code=200,
+        message='Password changed successfully'
+    )
