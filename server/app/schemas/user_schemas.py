@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, constr
-from typing import Literal
+from typing import Literal, Optional
 
 
 class UserRegisterSchema(BaseModel):
@@ -16,3 +16,9 @@ class UserLoginSchema(BaseModel):
 
 class UserChangePasswordSchema(BaseModel):
     new_password: constr(min_length=8)
+
+
+class UserUpdateSchema(BaseModel):
+    username: Optional[constr(min_length=3, max_length=50)]
+    email: Optional[EmailStr]
+    user_type: Optional[Literal['default', 'premium', 'admin']]
