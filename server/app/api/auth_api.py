@@ -169,7 +169,9 @@ def change_password():
             details=str(e)
         )
 
-    return create_response(
+    response = make_response(create_response(
         status_code=200,
-        message='Password changed successfully'
-    )
+        message='Password changed successfully, please log in again'
+    ))
+    unset_jwt_cookies(response)
+    return response
