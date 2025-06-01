@@ -24,6 +24,11 @@ def add_claims_to_jwt(identity):
 @auth.route('/register', methods=('POST',))
 def register():
     data = request.get_json()
+    if not data:
+        return create_response(
+            status_code=400,
+            message='No input data provided'
+        )
 
     try:
         validated_data = UserRegisterSchema(**data)
@@ -81,6 +86,11 @@ def register():
 @auth.route('/login', methods=('POST',))
 def login():
     data = request.get_json()
+    if not data:
+        return create_response(
+            status_code=400,
+            message='No input data provided'
+        )
 
     try:
         validated_data = UserLoginSchema(**data)
@@ -138,6 +148,12 @@ def change_password():
         )
 
     data = request.get_json()
+    if not data:
+        return create_response(
+            status_code=400,
+            message='No input data provided'
+        )
+
     try:
         validated_data = UserChangePasswordSchema(**data)
     except ValidationError as e:
