@@ -42,16 +42,17 @@ def register():
 
     existing_user = User.query.filter(
         (User.email == validated_data.email) | (User.username == validated_data.username)).first()
-    if existing_user.email == validated_data.email:
-        return create_response(
-            status_code=400,
-            message='User with this email already exists'
-        )
-    if existing_user.username == validated_data.username:
-        return create_response(
-            status_code=400,
-            message='User with this username already exists'
-        )
+    if existing_user:
+        if existing_user.email == validated_data.email:
+            return create_response(
+                status_code=400,
+                message='User with this email already exists'
+            )
+        if existing_user.username == validated_data.username:
+            return create_response(
+                status_code=400,
+                message='User with this username already exists'
+            )
 
     try:
         user = User(
@@ -151,7 +152,7 @@ def change_password():
             details=str(e)
         )
 
-    if not user.check_password(validated_data.new_password):
+    if user.check_password(validated_data.new_password):
         return create_response(
             status_code=400,
             message='New password cannot be the same as the old password'
