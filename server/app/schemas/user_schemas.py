@@ -19,6 +19,6 @@ class UserChangePasswordSchema(BaseModel):
 
 
 class UserUpdateSchema(BaseModel):
-    username: Optional[constr(min_length=3, max_length=50)]
-    email: Optional[EmailStr]
-    user_type: Optional[Literal['default', 'premium', 'admin']]
+    username: Optional[constr(min_length=3, max_length=50)] = None
+    email: Optional[EmailStr] = None
+    user_type: Optional[Literal['default', 'premium', 'admin']] = None
