@@ -7,10 +7,14 @@ user_type_enum = ENUM('default', 'premium', 'admin', name='user_type', create_ty
 
 class User(db.Model):
     __tablename__ = 'User'
-    __table_args__ = {'schema': 'public'}
+    __table_args__ = (
+        db.CheckConstraint("length(username) <= 50", name="user_username_length_check"),
+        db.CheckConstraint("length(email) <= 100", name="user_email_length_check"),
+        {'schema': 'public'}
+    )
 
     id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    username = db.Column(db.Text, nullable=False)
+    username = db.Column(db.Text, nullable=False, unique=True)
     email = db.Column(db.Text, nullable=False, unique=True)
     password_hash = db.Column(db.Text, nullable=False)
     type = db.Column(user_type_enum, nullable=False, server_default='default')
