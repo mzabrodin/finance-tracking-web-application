@@ -78,7 +78,9 @@ def update_current_user():
         )
 
     existing_user = User.query.filter(
-        (User.email == validated_data.email) | (User.username == validated_data.username)).first()
+        ((User.email == validated_data.email) | (User.username == validated_data.username)),
+        User.id != user_id
+    ).first()
     if existing_user:
         if existing_user.email == validated_data.email:
             return create_response(
@@ -91,8 +93,20 @@ def update_current_user():
                 message='User with this username already exists'
             )
 
+    update_data = validated_data.model_dump(exclude_unset=True)
+    no_changes = True
+    for key, value in update_data.items():
+        if getattr(user, key) != value:
+            no_changes = False
+            break
+
+    if no_changes:
+        return create_response(
+            status_code=400,
+            message='No changes detected to update'
+        )
+
     try:
-        update_data = validated_data.model_dump(exclude_unset=True)
         user.update_from_dict(update_data)
         db.session.commit()
     except SQLAlchemyError as e:
