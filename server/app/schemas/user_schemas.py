@@ -14,5 +14,5 @@ class UserLoginSchema(BaseModel):
     password: str
 
 
-class UserPasswordUpdateSchema(BaseModel):
+class UserChangePasswordSchema(BaseModel):
     new_password: constr(min_length=8)
