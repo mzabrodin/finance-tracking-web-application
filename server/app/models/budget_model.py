@@ -12,6 +12,7 @@ class Budget(db.Model):
         db.CheckConstraint('current >= 0 AND current <= 100000000', name='budget_current_check'),
         db.CheckConstraint('goal >= current', name='budget_valid_amounts'),
         db.CheckConstraint('end_at IS NULL OR end_at >= created_at', name='budget_end_after_created'),
+        db.CheckConstraint('end_at IS NULL OR end_at >= CURRENT_DATE', name='budget_end_in_future'),
         {'schema': 'public'}
     )
 
