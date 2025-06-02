@@ -2,6 +2,7 @@ from functools import wraps
 
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 
+from app.models.user_model import User
 from app.utils.responses import create_response
 
 
@@ -20,6 +21,13 @@ def logged_in_required(f):
             return create_response(
                 status_code=401,
                 message='User not logged in'
+            )
+
+        user = User.query.get(user_id)
+        if not user:
+            return create_response(
+                status_code=401,
+                message='User not found'
             )
 
         return f(*args, **kwargs)
