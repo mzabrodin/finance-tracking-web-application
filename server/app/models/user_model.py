@@ -1,23 +1,28 @@
-from app.utils.extensions import db
+from sqlalchemy import CheckConstraint, BigInteger, Column, Text, text
+
+from app.utils.extensions import db, bcrypt
 from sqlalchemy.dialects.postgresql import ENUM
-from app.utils.extensions import bcrypt
 
 user_type_enum = ENUM('default', 'premium', 'admin', name='user_type', create_type=False)
 
 
 class User(db.Model):
-    __tablename__ = 'User'
+    __tablename__ = 'user'
     __table_args__ = (
-        db.CheckConstraint("length(username) <= 50", name="user_username_length_check"),
-        db.CheckConstraint("length(email) <= 100", name="user_email_length_check"),
+        CheckConstraint("char_length(username) > 2 AND char_length(username) <= 50",
+                        name="user_username_length_check"),
+        CheckConstraint("char_length(email) > 0 AND char_length(email) <= 100",
+                        name="user_email_length_check"),
+        CheckConstraint("char_length(password_hash) > 0",
+                        name="user_password_hash_length_check"),
         {'schema': 'public'}
     )
 
-    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    username = db.Column(db.Text, nullable=False, unique=True)
-    email = db.Column(db.Text, nullable=False, unique=True)
-    password_hash = db.Column(db.Text, nullable=False)
-    type = db.Column(user_type_enum, nullable=False, server_default='default')
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    username = Column(Text, nullable=False, unique=True)
+    email = Column(Text, nullable=False, unique=True)
+    password_hash = Column(Text, nullable=False)
+    type = Column(user_type_enum, nullable=False, server_default=text('default'))
 
     def __init__(self, username, email, password, user_type='default'):
         self.username = username
