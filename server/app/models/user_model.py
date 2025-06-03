@@ -8,7 +8,7 @@ user_type_enum = ENUM('default', 'premium', 'admin', name='user_type', create_ty
 class User(db.Model):
     __tablename__ = 'User'
     __table_args__ = (
-        db.CheckConstraint("length(username) > 3 AND length(username) <= 50", name="user_username_length_check"),
+        db.CheckConstraint("length(username) > 2 AND length(username) <= 50", name="user_username_length_check"),
         db.CheckConstraint("length(email) > 0 AND length(email) <= 100", name="user_email_length_check"),
         db.CheckConstraint("length(password_hash) > 0", name="user_password_hash_length_check"),
         {'schema': 'public'}
