@@ -17,13 +17,6 @@ users = Blueprint('users', __name__)
 def get_current_user():
     user_id = get_jwt_identity()
     user = User.query.get(user_id)
-    if not user:
-        response = make_response(create_response(
-            status_code=404,
-            message='User not found'
-        ))
-        unset_jwt_cookies(response)
-        return response
 
     claims = get_jwt()
     user_type = claims.get('user_type', None)
@@ -47,13 +40,6 @@ def get_current_user():
 def update_current_user():
     user_id = get_jwt_identity()
     user = User.query.get(user_id)
-    if not user:
-        response = make_response(create_response(
-            status_code=404,
-            message='User not found'
-        ))
-        unset_jwt_cookies(response)
-        return response
 
     data = request.get_json()
     if not data:

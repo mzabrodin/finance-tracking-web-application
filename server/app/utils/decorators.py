@@ -1,6 +1,7 @@
 from functools import wraps
 
-from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
+from flask import make_response
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt, unset_jwt_cookies
 
 from app.models.user_model import User
 from app.utils.responses import create_response
@@ -11,6 +12,7 @@ def logged_in_required(f):
 
     This decorator checks if the user is authenticated by verifying the JWT token.
     If the user is not authenticated, it returns a 401 Unauthorized response.
+    If the user is authenticated but not found in the database, it returns a 404 Not Found response.
     """
 
     @wraps(f)
@@ -25,10 +27,12 @@ def logged_in_required(f):
 
         user = User.query.get(user_id)
         if not user:
-            return create_response(
-                status_code=401,
+            response = make_response(create_response(
+                status_code=404,
                 message='User not found'
-            )
+            ))
+            unset_jwt_cookies(response)
+            return response
 
         return f(*args, **kwargs)
 
