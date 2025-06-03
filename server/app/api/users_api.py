@@ -89,11 +89,12 @@ def update_current_user():
     if no_changes:
         return create_response(
             status_code=400,
-            message='No changes detected to update'
+            message='In one or more fields, no changes were made',
         )
 
     try:
-        user.update_from_dict(update_data)
+        for key, value in update_data.items():
+            setattr(user, key, value)
         db.session.commit()
     except SQLAlchemyError as e:
         db.session.rollback()
