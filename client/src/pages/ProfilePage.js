@@ -9,24 +9,33 @@ import '../styles/ProfilePage.css';
 
 function ProfilePage() {
   const { user, changePassword } = useAuth();
-  const [passwordData, setPasswordData] = useState({ new_password: '' });
+  const [formData, setFormData] = useState({
+    username: user?.username || '',
+    new_password: ''
+  });
   const navigate = useNavigate();
 
-  console.log('ProfilePage user:', user);
+  useEffect(() => {
+    if (user) {
+      setFormData({ username: user.username, new_password: '' });
+    }
+  }, [user]);
 
-  const handleChangePassword = async (e) => {
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await changePassword(passwordData.new_password);
-      toast.success('Пароль змінено, будь ласка, увійдіть знову');
-      navigate('/auth');
+      if (formData.new_password) {
+        await changePassword(formData.new_password);
+        toast.success('Пароль змінено, будь ласка, увійдіть знову');
+        navigate('/auth');
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Помилка при зміні пароля');
     }
-  };
-
-  const handlePasswordChange = (e) => {
-    setPasswordData({ new_password: e.target.value });
   };
 
   if (!user) return <div>Завантаження...</div>;
@@ -35,29 +44,55 @@ function ProfilePage() {
     <div className="app-layout">
       <Sidebar />
       <div className="content-container">
-        <div className="profile-container">
-          <h1>Профіль</h1>
-          <div className="user-info">
-            <p><strong>Ім'я користувача:</strong> {user.username}</p>
-            <p><strong>Email:</strong> {user.email}</p>
-            <p><strong>Тип користувача:</strong> {user.type}</p>
-          </div>
-          <Link to="/budgets" className="btn">Переглянути бюджети</Link>
-          <form onSubmit={handleChangePassword} className="change-password-form">
-            <h2>Змінити пароль</h2>
-            <div className="input-box">
-              <input
-                type="password"
-                name="new_password"
-                placeholder="Новий пароль"
-                value={passwordData.new_password}
-                onChange={handlePasswordChange}
-                required
-              />
-              <i className="bx bxs-lock-alt"></i>
+        <div class avatar-container="profile-container">
+          <h1>Профіль користувача</h1>
+          <p>Перегляд даних про користувача та зміна паролю</p>
+          <div className="profile-cards">
+            <div className="profile-card avatar-card">
+              <div className="avatar-placeholder">
+              <i className="bx bx-user" style={{ fontSize: '250px', color: ' #4a4a4a' }}></i>
+              </div>
             </div>
-            <button type="submit" className="btn">Змінити пароль</button>
-          </form>
+            <div className="profile-card info-card">
+              <label>ЗАГАЛЬНА ІНФОРМАЦІЯ</label>
+              <input
+                type="text"
+                value={formData.username}
+                onChange={handleChange}
+                disabled
+              />
+            </div>
+            <div className="profile-card balance-card">
+              <label>МІЙ БАЛАНС</label>
+              <input
+                type="text"
+                value={user?.balance || '0 грн'}
+                disabled
+              />
+            </div>
+  <div className="profile-card login-card">
+  <form onSubmit={handleSubmit}>
+    <div className="input-group">
+      <label>БЕЗПЕКА</label>
+      <input
+        type="email"
+        name="email"
+        value={user?.email || ''}
+        disabled
+        placeholder="ЕЛЕКТРОННА ПОШТА"
+      />
+      <input
+        type="password"
+        name="new_password"
+        value={formData.new_password}
+        onChange={handleChange}
+        placeholder="НОВИЙ ПАРОЛЬ"
+      />
+    </div>
+    <button type="submit" className="btn">Зміна паролю</button>
+  </form>
+</div>
+          </div>
         </div>
       </div>
     </div>

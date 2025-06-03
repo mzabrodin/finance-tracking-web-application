@@ -1,3 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cuprum:ital,wght@0,400..700;1,400..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Oswald:wght@200..700&family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 .app-layout {
   display: flex;
   min-height: 100vh;
@@ -5,80 +16,178 @@
 
 .content-container {
   flex: 1;
-  margin-left: 250px;
+  margin-left: 285px;
   background-color: #ffffff;
   padding: 40px;
 }
 
 .profile-container {
-  max-width: 600px;
+  max-width: 900px;
   margin: 0 auto;
 }
 
-.profile-container h1 {
-  font-size: 28px;
-  color: #333;
-  margin-bottom: 20px;
+h1 {
+  color: #000000;
+  font-family: "Oswald", sans-serif;
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -1px;
 }
 
-.user-info {
+.profile-container h1 {
+  color: #333;
+  margin-bottom: 0px;
+}
+
+.profile-container p {
+  color: rgb(79, 79, 79);
+  font-family: "Oswald", sans-serif;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: normal;
+  white-space: nowrap;
+  margin-top: 0;
   margin-bottom: 30px;
 }
 
-.user-info p {
-  font-size: 16px;
-  color: #333;
-  margin-bottom: 10px;
-}
-
-.user-info p strong {
-  color: #000;
-}
-
-.change-password-form {
+.profile-cards {
   margin-top: 20px;
+  display: grid;
+  grid-template-columns: 300px 420px 350px;
+  grid-template-rows: auto auto;
+  gap: 20px;
 }
 
-.change-password-form h2 {
-  font-size: 20px;
-  color: #333;
+.profile-card {
+  background: #usti;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 12px 1px rgba(61, 61, 61, 0.25);
+}
+
+.profile-card.avatar-card {
+  grid-column: 1 / 2;
+  grid-row: 1;
+  height: 250px;
+}
+
+.profile-card.info-card {
+  grid-column: 2 / 3;
+  grid-row: 1;
+}
+
+.profile-card.balance-card {
+  grid-column: 3 / 4;
+  grid-row: 1;
+  background-color: #333;
+}
+
+.profile-card.login-card {
+  grid-column: 1 / 4;
+  grid-row: 2;
+  height: 280px;
+}
+
+.avatar-card {
+  text-align: center;
+}
+
+.info-card label,
+.balance-card label,
+.login-card label {
+  display: block;
+  margin-top: 21px;
+  margin-left: 35px;
+  font-size: 26px;
+  color: #000000;
+  font-family: "Oswald", sans-serif;
+  margin-bottom: 5px;
+}
+
+.balance-card label {
+  color: #ffffff;
+}
+
+.info-card input,
+.balance-card input,
+.login-card input {
+  padding: 20px;
+  font-size: 16px;
+  margin-bottom: 10px;
+  border: 1px solid #000;
+  border-radius: 16px;
+  width: 263px;
+  height: 60px;
+  background: #fff;
+  margin-top: 18px;
+  margin-left: 35px;
+  font-family: "Oswald", sans-serif;
+}
+
+.balance-card input {
+  color: #ffffff;
+}
+
+.info-card input:disabled,
+.balance-card input:disabled,
+.login-card input:disabled {
+  background: #f9f9f9;
+  color: #666;
+}
+
+.balance-card input:disabled {
+  background: #4a4a4a;
+  color: #ffffff;
+}
+
+.login-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.login-card label {
+  display: block;
+  margin-top: 21px;
+  margin-left: 35px;
+  font-size: 26px;
+  color: #000000;
+  font-family: "Oswald", sans-serif;
   margin-bottom: 15px;
 }
 
-.input-box {
-  position: relative;
-  margin-bottom: 20px;
-}
-
-.input-box input {
-  width: 100%;
-  padding: 10px 40px 10px 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+.login-card input {
+  padding: 20px;
   font-size: 16px;
+  margin-bottom: 26px;
+  border: 1px solid #000;
+  border-radius: 16px;
+  width: 300px;
+  height: 60px;
+  background: #fff;
+  margin-left: 35px;
+  font-family: "Oswald", sans-serif;
 }
 
-.input-box i {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #777;
-}
-
-.btn {
+.login-card .btn {
+  margin-left: 35px;
+  margin-bottom: 35px;
   padding: 10px 20px;
-  background-color: #00aaff;
+  border: 1px solid #000;
+  border-radius: 12px;
+  width: 220px;
+  height: 49px;
+  background-color: #000000;
   color: #fff;
-  border: none;
-  border-radius: 5px;
   cursor: pointer;
   text-decoration: none;
-  display: inline-block;
-  margin: 10px 0;
+  align-self: flex-start;
   transition: background-color 0.3s;
+  font-family: "Oswald", sans-serif;
+  font-size: 20px;
 }
 
-.btn:hover {
-  background-color: #0088cc;
+.login-card .btn:hover {
+  background-color: #333;
 }
