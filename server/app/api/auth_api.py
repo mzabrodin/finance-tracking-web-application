@@ -76,11 +76,14 @@ def register():
             details=str(e)
         )
 
-    return create_response(
+    access_token = create_access_token(identity=str(user.id))
+    response = make_response(create_response(
         status_code=201,
-        message='User registered successfully',
+        message='User registered successfully, logged in',
         data=user.to_dict()
-    )
+    ))
+    set_access_cookies(response, access_token)
+    return response
 
 
 @auth.route('/login', methods=('POST',))
