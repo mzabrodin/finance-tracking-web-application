@@ -1,18 +1,48 @@
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.content-container {
+  flex: 1;
+  margin-left: 250px;
+  background-color: #ffffff;
+  padding: 40px;
+}
+
 .profile-container {
   max-width: 600px;
-  margin: 50px auto;
-  padding: 20px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  margin: 0 auto;
+}
+
+.profile-container h1 {
+  font-size: 28px;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.user-info {
+  margin-bottom: 30px;
 }
 
 .user-info p {
-  margin: 10px 0;
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.user-info p strong {
+  color: #000;
 }
 
 .change-password-form {
   margin-top: 20px;
+}
+
+.change-password-form h2 {
+  font-size: 20px;
+  color: #333;
+  margin-bottom: 15px;
 }
 
 .input-box {
@@ -22,9 +52,10 @@
 
 .input-box input {
   width: 100%;
-  padding: 10px;
+  padding: 10px 40px 10px 10px;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 5px;
+  font-size: 16px;
 }
 
 .input-box i {
@@ -32,26 +63,22 @@
   right: 10px;
   top: 50%;
   transform: translateY(-50%);
+  color: #777;
 }
 
 .btn {
   padding: 10px 20px;
-  background: #007bff;
+  background-color: #00aaff;
   color: #fff;
   border: none;
-  border-radius: 4px;
+  border-radius: 5px;
   cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  margin: 10px 0;
+  transition: background-color 0.3s;
 }
 
 .btn:hover {
-  background: #0056b3;
-}
-
-.logout-btn {
-  margin-top: 20px;
-  background: #dc3545;
-}
-
-.logout-btn:hover {
-  background: #c82333;
+  background-color: #0088cc;
 }

@@ -27,6 +27,62 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/history"
+          element={
+            <ProtectedRoute>
+              <div>Сторінка історії (в розробці)</div>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <div>Сторінка налаштувань (в розробці)</div>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/calculator"
+          element={
+            <ProtectedRoute>
+              <div>Сторінка калькулятора (в розробці)</div>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/transactions"
+          element={
+            <ProtectedRoute>
+              <div>Сторінка транзакцій (в розробці)</div>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/categories"
+          element={
+            <ProtectedRoute>
+              <div>Сторінка категорій (в розробці)</div>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/analytics"
+          element={
+            <ProtectedRoute>
+              <div>Сторінка аналітики (в розробці)</div>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/budgets"
+          element={
+            <ProtectedRoute>
+              <div>Сторінка бюджетів (в розробці)</div>
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </div>
   );

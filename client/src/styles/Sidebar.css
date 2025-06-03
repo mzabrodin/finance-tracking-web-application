@@ -1,0 +1,120 @@
+@import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cuprum:ital,wght@0,400..700;1,400..700&display=swap');
+
+.sidebar {
+  width: 18%;
+  height: 100vh;
+  background-color: #333;
+  color: #ffffff;
+  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  font-family: Arial, sans-serif;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+.sidebar-header {
+  height: 45px;
+  width: 238px;
+  margin-top: 35px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 46px;
+}
+
+
+.sidebar-header h2 {
+  font-family: 'Black Han Sans', sans-serif;
+  font-weight: 400;
+  font-size: 36px;
+  color: #fff;
+  margin-left: 28px;
+}
+
+
+.sidebar-section {
+  margin-bottom: 20px;
+}
+
+.sidebar-section h3 {
+  font-weight: bold;
+  font-family: "Cuprum", sans-serif;
+  font-weight: 700;
+  font-size: 22px;
+  color: #fff;
+  text-transform: uppercase;
+  padding: 0 20px;
+  margin-bottom: 5px;
+}
+
+.sidebar-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-section ul li {
+  padding: 6px 18px;
+  margin-left: 40px;
+}
+
+.sidebar-section ul li a {
+  font-family: "Cuprum", sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: #fff;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  transition: color 0.3s;
+}
+
+.sidebar-section ul li a:hover {
+    border-radius: 6px;
+    padding: 5px 6px 5px 7px;
+    background: rgba(217, 217, 217, 0.33);
+}
+
+.sidebar-section ul li a i {
+  margin-right: 10px;
+  font-size: 16px;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 10px 20px;
+}
+
+.logout-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: transparent;
+  font-family: "Cuprum", sans-serif;
+  font-weight: 700;
+  font-size: 22px;
+  color: #fff;
+  text-transform: uppercase;
+  padding: 0 0px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.logout-btn i {
+  margin-right: 8px;
+}
+
+.bx bx-log-out:hover {
+  background-color: #ff4d4d;
+  color: #ffffff;
+  border-color: #ff4d4d;
+}
+
+.sidebar-section ul li a.active {
+  color: #00aaff;
+  font-weight: bold;
+}
