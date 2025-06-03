@@ -1,6 +1,5 @@
-from flask import Blueprint, request, jsonify, make_response
-from flask_jwt_extended import create_access_token, set_access_cookies, unset_jwt_cookies, jwt_required, \
-    get_jwt_identity, get_jwt
+from flask import Blueprint, request, make_response
+from flask_jwt_extended import create_access_token, set_access_cookies, unset_jwt_cookies, get_jwt_identity
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -144,11 +143,6 @@ def logout():
 def change_password():
     user_id = get_jwt_identity()
     user = User.query.get(user_id)
-    if not user:
-        return create_response(
-            status_code=404,
-            message='User not found'
-        )
 
     data = request.get_json()
     if not data:
