@@ -1,25 +1,49 @@
-// App.js
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import './styles/AuthPage.css';
 import AuthPage from './pages/AuthPage';
+import ProfilePage from './pages/ProfilePage';
 
-function App() {
+function AppContent() {
+  const location = useLocation();
   const [isActive, setIsActive] = useState(false);
 
-  const handleToggle = () => {
-    setIsActive(!isActive);
-  };
+  useEffect(() => {
+    setIsActive(location.pathname === '/register');
+  }, [location]);
 
   return (
-    <Router>
-      <div className={`container ${isActive ? 'active' : ''}`}>
-        <Routes>
-          <Route path="/" element={<AuthPage isLogin={true} onToggle={handleToggle} />} />
-          <Route path="/register" element={<AuthPage isLogin={false} onToggle={handleToggle} />} />
-        </Routes>
-      </div>
-    </Router>
+    <div className={`container ${isActive ? 'active' : ''}`}>
+      <Routes>
+        <Route path="/" element={<Navigate to="/auth" />} />
+        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/register" element={<AuthPage />} />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </div>
+  );
+}
+
+function ProtectedRoute({ children }) {
+  const { user } = useAuth();
+  return user ? children : <Navigate to="/auth" />;
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <AppContent />
+      </Router>
+    </AuthProvider>
   );
 }
 

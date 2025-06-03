@@ -1,19 +1,79 @@
-// pages/AuthPage.js
-import React from 'react';
+import React, { useState } from 'react';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../config';
+import { useNavigate, useLocation } from 'react-router-dom';
 import '../styles/AuthPage.css';
 
-function AuthPage({ isLogin, onToggle }) {
+function AuthPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
+  const { login, register } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const isLogin = location.pathname === '/auth';
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log('isLogin:', isLogin);
+    try {
+      const data = { email, password };
+      if (!isLogin) {
+        data.username = username;
+        data.user_type = 'default';
+        console.log('Sending register request:', { username, email, password, user_type: 'default' });
+        const response = await register(username, email, password, 'default');
+        if (response.status === 'success') {
+          alert('Реєстрація успішна! Будь ласка, увійдіть.');
+          navigate('/auth');
+        }
+      } else {
+        console.log('Sending login request:', { email, password });
+        const response = await login(email, password);
+        if (response.status === 'success') {
+          alert('Успішний вхід!');
+          navigate('/profile');
+        }
+      }
+    } catch (error) {
+      console.error('Помилка:', error.response?.data || error.message);
+      alert(error.response?.data?.message || 'Помилка автентифікації');
+    }
+  };
+
+  const handleToggle = () => {
+    if (isLogin) {
+      navigate('/register');
+    } else {
+      navigate('/auth');
+    }
+  };
+
   return (
     <>
       <div className={`form-box login ${isLogin ? '' : 'hidden'}`}>
-        <form>
+        <form onSubmit={handleSubmit}>
           <h1>Логін</h1>
           <div className="input-box">
-            <input type="email" placeholder="Електронна пошта" required />
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Електронна пошта"
+              required
+            />
             <i className="bx bxs-envelope"></i>
           </div>
           <div className="input-box">
-            <input type="password" placeholder="Пароль" required />
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Пароль"
+              required
+            />
             <i className="bx bxs-lock-alt"></i>
           </div>
           <div className="forgot-link">
@@ -23,35 +83,53 @@ function AuthPage({ isLogin, onToggle }) {
         </form>
       </div>
       <div className={`form-box register ${!isLogin ? 'active' : 'hidden'}`}>
-        <form>
+        <form onSubmit={handleSubmit}>
           <h1>Реєстрація</h1>
           <div className="input-box">
-            <input type="text" placeholder="Ім'я користувача" required />
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Ім'я користувача"
+              required
+            />
             <i className="bx bxs-user"></i>
           </div>
           <div className="input-box">
-            <input type="email" placeholder="Електронна пошта" required />
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Електронна пошта"
+              required
+            />
             <i className="bx bxs-envelope"></i>
           </div>
           <div className="input-box">
-            <input type="password" placeholder="Пароль" required />
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Пароль"
+              required
+            />
             <i className="bx bxs-lock-alt"></i>
           </div>
           <button type="submit" className="btn">Зареєструватися</button>
         </form>
       </div>
       <div className="toggle-box">
-        <div className="toggle-panel toggle-left">
+        <div className={`toggle-panel toggle-left ${!isLogin ? 'active' : ''}`}>
           <h1>Вітаємо!</h1>
           <p>Немає акаунта?</p>
-          <button className="btn" onClick={onToggle}>
+          <button className="btn" onClick={handleToggle}>
             Реєстрація
           </button>
         </div>
-        <div className="toggle-panel toggle-right">
+        <div className={`toggle-panel toggle-right ${isLogin ? 'active' : ''}`}>
           <h1>З поверненням!</h1>
           <p>Вже маєте акаунт?</p>
-          <button className="btn" onClick={onToggle}>
+          <button className="btn" onClick={handleToggle}>
             Логін
           </button>
         </div>
