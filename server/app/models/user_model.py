@@ -1,16 +1,18 @@
-from app.utils.extensions import db
+from app.utils.extensions import db, bcrypt
 from sqlalchemy.dialects.postgresql import ENUM
-from app.utils.extensions import bcrypt
 
 user_type_enum = ENUM('default', 'premium', 'admin', name='user_type', create_type=False)
 
 
 class User(db.Model):
-    __tablename__ = 'User'
+    __tablename__ = 'user'
     __table_args__ = (
-        db.CheckConstraint("length(username) > 2 AND length(username) <= 50", name="user_username_length_check"),
-        db.CheckConstraint("length(email) > 0 AND length(email) <= 100", name="user_email_length_check"),
-        db.CheckConstraint("length(password_hash) > 0", name="user_password_hash_length_check"),
+        db.CheckConstraint("char_length(username) > 2 AND char_length(username) <= 50",
+                           name="user_username_length_check"),
+        db.CheckConstraint("char_length(email) > 0 AND char_length(email) <= 100",
+                           name="user_email_length_check"),
+        db.CheckConstraint("char_length(password_hash) > 0",
+                           name="user_password_hash_length_check"),
         {'schema': 'public'}
     )
 
