@@ -35,7 +35,7 @@ def get_current_user():
         return response
 
 
-@users.route('/update', methods=('PUT',))
+@users.route('/', methods=('PUT',))
 @logged_in_required
 def update_current_user():
     user_id = get_jwt_identity()
