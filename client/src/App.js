@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext';
 import AuthPage from './pages/AuthPage';
 import ProfilePage from './pages/ProfilePage';
+import CategoriesPage from './pages/CategoriesPage';
+
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth();
@@ -58,13 +60,13 @@ function App() {
             }
           />
           <Route
-            path="/categories"
-            element={
-              <ProtectedRoute>
-                <div>Сторінка категорій (в розробці)</div>
-              </ProtectedRoute>
-            }
-          />
+              path="/categories"
+              element={
+                <ProtectedRoute>
+                  <CategoriesPage />
+                </ProtectedRoute>
+              }
+            />
           <Route
             path="/analytics"
             element={
