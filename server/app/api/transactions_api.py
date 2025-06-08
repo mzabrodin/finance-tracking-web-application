@@ -228,3 +228,47 @@ def get_transaction(transaction_id): # get a specific transaction by ID of the u
         message='Transaction retrieved successfully',
         data=transaction.to_dict()
     )
+
+@transactions.route('/incomes/<int:budget_id>', methods=('GET',))
+@logged_in_required
+def get_incomes_by_budget(budget_id):
+    user_id = get_jwt_identity()
+    transactions = Transaction.query.filter_by(user_id=user_id, budget_id=budget_id, type='income').all()
+
+    if not transactions:
+        return create_response(
+            status_code=404,
+            message='No income transactions found for the user in this budget'
+        )
+
+    total_income = sum(float(transaction.amount) for transaction in transactions)
+    return create_response(
+        status_code=200,
+        message='Income transactions retrieved successfully',
+        data={
+            'total_income': total_income,
+            'transactions': [transaction.to_dict() for transaction in transactions]
+        }
+    )
+
+@transactions.route('/expenses/<int:budget_id>', methods=('GET',))
+@logged_in_required
+def get_expenses_by_budget(budget_id):
+    user_id = get_jwt_identity()
+    transactions = Transaction.query.filter_by(user_id=user_id, budget_id=budget_id, type='expense').all()
+
+    if not transactions:
+        return create_response(
+            status_code=404,
+            message='No expense transactions found for the user in this budget'
+        )
+
+    total_expense = sum(float(transaction.amount) for transaction in transactions)
+    return create_response(
+        status_code=200,
+        message='Expense transactions retrieved successfully',
+        data={
+            'total_expense': total_expense,
+            'transactions': [transaction.to_dict() for transaction in transactions]
+        }
+    )
