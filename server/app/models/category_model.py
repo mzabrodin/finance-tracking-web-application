@@ -2,10 +2,15 @@ from sqlalchemy import (CheckConstraint, Column, BigInteger, ForeignKey, Text)
 from sqlalchemy.orm import relationship
 from app.utils.extensions import db
 
+
 class Category(db.Model):
     __tablename__ = 'category'
     __table_args__ = (
-        CheckConstraint("char_length(name) > 0 AND char_length(name) <= 30", name="category_name_length_check"),
+        CheckConstraint("char_length(name) > 2 AND char_length(name) <= 20",
+                        name="category_name_length_check"),
+        CheckConstraint("description IS NULL OR (char_length(description) > 2 AND char_length(description) <= 200)",
+                        name="category_description_length_check"
+                        ),
         {'schema': 'public'}
     )
 

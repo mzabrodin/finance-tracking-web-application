@@ -45,6 +45,16 @@ def get_categories():
     user_categories = Category.query.filter_by(user_id=user_id).all()
     return create_response(200, 'Categories retrieved successfully', [category.to_dict() for category in user_categories])
 
+@categories.route('/<int:category_id>', methods=['GET'])
+@logged_in_required
+def get_category(category_id):
+    user_id = get_jwt_identity()
+    category = Category.query.filter_by(id=category_id, user_id=user_id).first()
+
+    if not category:
+        return create_response(404, 'Category not found or access denied')
+    return create_response(200, 'Category retrieved successfully', category.to_dict())
+
 
 @categories.route('/<int:category_id>', methods=['PUT'])
 @logged_in_required
