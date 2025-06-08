@@ -3,7 +3,7 @@ from typing import Optional
 from pydantic import BaseModel, Field, model_validator, field_validator, constr
 
 
-class BudgetCreateSchema(BaseModel):
+class BudgetSchema(BaseModel):
     name: constr(min_length=3, max_length=30)
     initial: float = Field(..., ge=0, le=100_000_000)
     current: float = Field(None, ge=0, le=100_000_000)
@@ -20,6 +20,9 @@ class BudgetCreateSchema(BaseModel):
 
     @model_validator(mode='after')
     def validate_constraints(self):
+        if (self.goal is not None and self.end_at is None) or (self.end_at is not None and self.goal is None):
+            raise ValueError("Both 'goal' and 'end_at' must be provided together")
+
         if self.current is None:
             self.current = self.initial
 

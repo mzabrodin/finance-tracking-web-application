@@ -18,6 +18,8 @@ class Budget(db.Model):
                         name='budget_valid_amounts'),
         CheckConstraint('(end_at IS NULL OR (end_at > created_at AND end_at > CURRENT_DATE))',
                         name='budget_end_at_check'),
+        CheckConstraint('(goal IS NOT NULL AND end_at IS NOT NULL) OR (goal IS NULL AND end_at IS NULL)',
+                        name='budget_goal_end_at_check'),
         {'schema': 'public'}
     )
 
