@@ -20,7 +20,7 @@ class Transaction(db.Model):
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     user_id = Column(BigInteger, ForeignKey('public.user.id', onupdate="CASCADE", ondelete="CASCADE"),
                      nullable=False)
-    category_id = Column(BigInteger, ForeignKey('public.category.id', onupdate="CASCADE", ondelete="CASCADE"),
+    category_id = Column(BigInteger, ForeignKey('public.category.id', onupdate="CASCADE"),
                          nullable=False)
     budget_id = Column(BigInteger, ForeignKey('public.budget.id', onupdate="CASCADE", ondelete="CASCADE"),
                        nullable=False)
