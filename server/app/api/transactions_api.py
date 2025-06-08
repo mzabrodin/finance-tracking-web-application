@@ -220,6 +220,7 @@ def delete_transaction(transaction_id):
 def get_transactions():  # all transactions for the user
     user_id = get_jwt_identity()
     transactions = Transaction.query.filter_by(user_id=user_id).all()
+    transactions.sort(key=lambda x: x.created_at, reverse=True)
 
     if not transactions:
         return create_response(
