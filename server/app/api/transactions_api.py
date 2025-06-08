@@ -259,6 +259,7 @@ def get_transaction(transaction_id):  # get a specific transaction by ID of the 
 def get_incomes_by_budget(budget_id):
     user_id = get_jwt_identity()
     transactions = Transaction.query.filter_by(user_id=user_id, budget_id=budget_id, type='income').all()
+    transactions.sort(key=lambda x: x.created_at, reverse=True)
 
     if not transactions:
         return create_response(
@@ -282,6 +283,7 @@ def get_incomes_by_budget(budget_id):
 def get_expenses_by_budget(budget_id):
     user_id = get_jwt_identity()
     transactions = Transaction.query.filter_by(user_id=user_id, budget_id=budget_id, type='expense').all()
+    transactions.sort(key=lambda x: x.created_at, reverse=True)
 
     if not transactions:
         return create_response(
@@ -304,6 +306,7 @@ def get_expenses_by_budget(budget_id):
 def get_transactions_by_category(category_id):
     user_id = get_jwt_identity()
     transactions = Transaction.query.filter_by(user_id=user_id, category_id=category_id).all()
+    transactions.sort(key=lambda x: x.created_at, reverse=True)
 
     if not transactions:
         return create_response(
