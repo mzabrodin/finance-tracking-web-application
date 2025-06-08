@@ -198,7 +198,14 @@ def delete_transaction(transaction_id):
             message='Transaction not found'
         )
 
+    budget = transaction.budget
+
     try:
+        if transaction.type == 'income':
+            budget.current -= transaction.amount
+        elif transaction.type == 'expense':
+            budget.current += transaction.amount
+
         db.session.delete(transaction)
         db.session.commit()
     except SQLAlchemyError as e:
