@@ -298,3 +298,21 @@ def get_expenses_by_budget(budget_id):
             'transactions': [transaction.to_dict() for transaction in transactions]
         }
     )
+
+@transactions.route('/<int:category_id>/category', methods=('GET',))
+@logged_in_required
+def get_transactions_by_category(category_id):
+    user_id = get_jwt_identity()
+    transactions = Transaction.query.filter_by(user_id=user_id, category_id=category_id).all()
+
+    if not transactions:
+        return create_response(
+            status_code=404,
+            message='No transactions found for this category'
+        )
+
+    return create_response(
+        status_code=200,
+        message='Transactions by category retrieved successfully',
+        data=[transaction.to_dict() for transaction in transactions]
+    )
