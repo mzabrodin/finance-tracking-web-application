@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from flask import Blueprint, request
 from flask_jwt_extended import get_jwt_identity
 from pydantic import ValidationError
@@ -73,6 +75,10 @@ def create_transaction():
             type=validated_data.type
         )
         db.session.add(transaction)
+        if validated_data.type == 'expense':
+            budget.current -= Decimal(validated_data.amount)
+        elif validated_data.type == 'income':
+            budget.current += Decimal(validated_data.amount)
         db.session.commit()
     except SQLAlchemyError as e:
         db.session.rollback()
@@ -117,6 +123,10 @@ def update_transaction(transaction_id):
                 message='Category not found for the user'
             )
 
+    old_amount = transaction.amount
+    old_type = transaction.type
+    budget = transaction.budget
+
     try:
         validated_data = TransactionSchema(**data)
     except ValidationError as e:
@@ -137,6 +147,19 @@ def update_transaction(transaction_id):
     try:
         for key, value in update_data.items():
             setattr(transaction, key, value)
+
+        new_amount = validated_data.amount
+        new_type = validated_data.type
+
+        if old_type == 'expense':
+            budget.current += Decimal(old_amount)
+        elif old_type == 'income':
+            budget.current -= Decimal(old_amount)
+
+        if new_type == 'expense':
+            budget.current -= Decimal(new_amount)
+        elif new_type == 'income':
+            budget.current += Decimal(new_amount)
 
         if category_id:
             transaction.category_id = category_id
@@ -194,7 +217,7 @@ def delete_transaction(transaction_id):
 
 @transactions.route('/', methods=('GET',))
 @logged_in_required
-def get_transactions(): # all transactions for the user
+def get_transactions():  # all transactions for the user
     user_id = get_jwt_identity()
     transactions = Transaction.query.filter_by(user_id=user_id).all()
 
@@ -213,7 +236,7 @@ def get_transactions(): # all transactions for the user
 
 @transactions.route('/<int:transaction_id>', methods=('GET',))
 @logged_in_required
-def get_transaction(transaction_id): # get a specific transaction by ID of the user
+def get_transaction(transaction_id):  # get a specific transaction by ID of the user
     user_id = get_jwt_identity()
     transaction = Transaction.query.filter_by(id=transaction_id, user_id=user_id).first()
 
@@ -228,6 +251,7 @@ def get_transaction(transaction_id): # get a specific transaction by ID of the u
         message='Transaction retrieved successfully',
         data=transaction.to_dict()
     )
+
 
 @transactions.route('/incomes/<int:budget_id>', methods=('GET',))
 @logged_in_required
@@ -250,6 +274,7 @@ def get_incomes_by_budget(budget_id):
             'transactions': [transaction.to_dict() for transaction in transactions]
         }
     )
+
 
 @transactions.route('/expenses/<int:budget_id>', methods=('GET',))
 @logged_in_required
