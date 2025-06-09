@@ -308,7 +308,7 @@ def get_expenses_by_budget(budget_id):
         }
     )
 
-@transactions.route('/<int:category_id>/category', methods=('GET',))
+@transactions.route('/category/<int:category_id>', methods=('GET',))
 @logged_in_required
 def get_transactions_by_category(category_id):
     user_id = get_jwt_identity()
