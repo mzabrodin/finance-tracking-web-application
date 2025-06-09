@@ -148,13 +148,13 @@ def update_transaction(transaction_id):
         for key, value in update_data.items():
             setattr(transaction, key, value)
 
-        new_amount = validated_data.amount
-        new_type = validated_data.type
-
         if old_type == 'expense':
             budget.current += Decimal(old_amount)
         elif old_type == 'income':
             budget.current -= Decimal(old_amount)
+
+        new_amount = validated_data.amount
+        new_type = validated_data.type
 
         if new_type == 'expense':
             budget.current -= Decimal(new_amount)
