@@ -40,7 +40,7 @@ def create_transaction() -> tuple[Response, int]:
     if not data:
         return create_response(
             status_code=400,
-            message='No data provided'
+            message='Не надано даних для створення транзакції'
         )
 
     try:
@@ -48,13 +48,13 @@ def create_transaction() -> tuple[Response, int]:
     except ValidationError as e:
         return create_response(
             status_code=400,
-            message='Validation error',
+            message='Неправильні вхідні дані',
             details=e.errors()
         )
     except Exception as e:
         return create_response(
             status_code=500,
-            message='Internal server error',
+            message='Помилка сервера',
             details=str(e)
         )
 
@@ -63,14 +63,14 @@ def create_transaction() -> tuple[Response, int]:
     if not category:
         return create_response(
             status_code=404,
-            message='Category not found for the user'
+            message='Не існує наданої категорії'
         )
 
     if (category.type == 'expenses' and validated_data.type != 'expense') or (
             category.type == 'incomes' and validated_data.type != 'income'):
         return create_response(
             status_code=400,
-            message='Category type does not match transaction type'
+            message='Тип категорії не відповідає типу транзакції'
         )
 
     budget_id = data.get('budget_id')
@@ -78,12 +78,7 @@ def create_transaction() -> tuple[Response, int]:
     if not budget:
         return create_response(
             status_code=404,
-            message='Budget not found for the user'
-        )
-    if not budget:
-        return create_response(
-            status_code=404,
-            message='Budget not found for the user'
+            message='Не існує наданого бюджету'
         )
 
     try:
@@ -106,13 +101,13 @@ def create_transaction() -> tuple[Response, int]:
         db.session.rollback()
         return create_response(
             status_code=500,
-            message='Database error',
+            message='Помилка бази даних',
             details=str(e)
         )
 
     return create_response(
         status_code=201,
-        message='Transaction created successfully',
+        message='Транзакцію успішно створено',
         data=transaction.to_dict()
     )
 
@@ -139,14 +134,14 @@ def update_transaction(transaction_id: int) -> tuple[Response, int]:
     if not data:
         return create_response(
             status_code=400,
-            message='No data provided'
+            message='Не надано даних для оновлення транзакції'
         )
 
     transaction = Transaction.query.filter_by(id=transaction_id, user_id=user_id).first()
     if not transaction:
         return create_response(
             status_code=404,
-            message='Transaction not found'
+            message='Транзакцію не знайдено'
         )
 
     category_id = None
@@ -156,14 +151,14 @@ def update_transaction(transaction_id: int) -> tuple[Response, int]:
         if not category:
             return create_response(
                 status_code=404,
-                message='Category not found for the user'
+                message='Категорію не знайдено'
             )
 
         if (category.type == 'expenses' and data.get('type') != 'expense') or (
                 category.type == 'incomes' and data.get('type') != 'income'):
             return create_response(
                 status_code=400,
-                message='Category type does not match transaction type'
+                message='Тип категорії не відповідає типу транзакції'
             )
 
     old_amount = transaction.amount
@@ -175,13 +170,13 @@ def update_transaction(transaction_id: int) -> tuple[Response, int]:
     except ValidationError as e:
         return create_response(
             status_code=400,
-            message='Validation error',
+            message='Неправильні вхідні дані',
             details=e.errors()
         )
     except Exception as e:
         return create_response(
             status_code=500,
-            message='Internal server error',
+            message='Помилка сервера',
             details=str(e)
         )
 
@@ -212,13 +207,13 @@ def update_transaction(transaction_id: int) -> tuple[Response, int]:
         db.session.rollback()
         return create_response(
             status_code=500,
-            message='Database error',
+            message='Помилка бази даних',
             details=str(e)
         )
 
     return create_response(
         status_code=200,
-        message='Transaction updated successfully',
+        message='Транзакцію успішно оновлено',
         data=transaction.to_dict()
     )
 
@@ -240,14 +235,14 @@ def delete_transaction(transaction_id: int) -> tuple[Response, int]:
     if not transaction_id:
         return create_response(
             status_code=400,
-            message='Transaction ID is required'
+            message='ID транзакції не надано'
         )
 
     transaction = Transaction.query.filter_by(id=transaction_id, user_id=user_id).first()
     if not transaction:
         return create_response(
             status_code=404,
-            message='Transaction not found'
+            message='Транзакцію не знайдено'
         )
 
     budget = transaction.budget
@@ -264,13 +259,13 @@ def delete_transaction(transaction_id: int) -> tuple[Response, int]:
         db.session.rollback()
         return create_response(
             status_code=500,
-            message='Database error',
+            message='Помилка бази даних',
             details=str(e)
         )
 
     return create_response(
         status_code=200,
-        message='Transaction deleted successfully'
+        message='Транзакцію успішно видалено'
     )
 
 
@@ -291,12 +286,12 @@ def get_transactions() -> tuple[Response, int]:
     if not transactions:
         return create_response(
             status_code=404,
-            message='No transactions found for the user'
+            message='Не знайдено транзакцій'
         )
 
     return create_response(
         status_code=200,
-        message='Transactions retrieved successfully',
+        message='Транзакції успішно отримано',
         data=[transaction.to_dict() for transaction in transactions]
     )
 
@@ -310,12 +305,12 @@ def get_transaction(transaction_id):  # get a specific transaction by ID of the 
     if not transaction:
         return create_response(
             status_code=404,
-            message='Transaction not found'
+            message='Не знайдено транзакцію з таким ID'
         )
 
     return create_response(
         status_code=200,
-        message='Transaction retrieved successfully',
+        message='Транзакцію успішно отримано',
         data=transaction.to_dict()
     )
 
@@ -340,13 +335,13 @@ def get_incomes_by_budget(budget_id: int) -> tuple[Response, int]:
     if not transactions:
         return create_response(
             status_code=404,
-            message='No income transactions found for the user in this budget'
+            message='Не знайдено транзакцій доходів для користувача в цьому бюджеті'
         )
 
     total_income = sum(float(transaction.amount) for transaction in transactions)
     return create_response(
         status_code=200,
-        message='Income transactions retrieved successfully',
+        message='Транзакції доходів успішно отримано',
         data={
             'total_income': total_income,
             'transactions': [transaction.to_dict() for transaction in transactions]
@@ -374,13 +369,13 @@ def get_expenses_by_budget(budget_id: int) -> tuple[Response, int]:
     if not transactions:
         return create_response(
             status_code=404,
-            message='No expense transactions found for the user in this budget'
+            message='Не знайдено транзакцій витрат для користувача в цьому бюджеті'
         )
 
     total_expense = sum(float(transaction.amount) for transaction in transactions)
     return create_response(
         status_code=200,
-        message='Expense transactions retrieved successfully',
+        message='Транзакції витрат успішно отримано',
         data={
             'total_expense': total_expense,
             'transactions': [transaction.to_dict() for transaction in transactions]
@@ -409,11 +404,11 @@ def get_transactions_by_category(category_id: int) -> tuple[Response, int]:
     if not transactions:
         return create_response(
             status_code=404,
-            message='No transactions found for this category'
+            message='Не знайдено транзакцій для цієї категорії'
         )
 
     return create_response(
         status_code=200,
-        message='Transactions by category retrieved successfully',
+        message='Транзакції для категорії успішно отримано',
         data=[transaction.to_dict() for transaction in transactions]
     )

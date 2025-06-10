@@ -33,13 +33,13 @@ def get_current_user() -> tuple[Response, int] | Response:
     if user.type == user_type:
         return create_response(
             status_code=200,
-            message='User retrieved successfully',
+            message='Користувач знайдений',
             data=user.to_dict()
         )
     else:
         response = make_response(create_response(
             status_code=403,
-            message='Forbidden: User type mismatch')
+            message='Тип користувача не відповідає типу в токені',)
         )
         unset_jwt_cookies(response)
         return response
@@ -71,7 +71,7 @@ def update_current_user() -> tuple[Response, int]:
     if not data:
         return create_response(
             status_code=400,
-            message='No data provided for update'
+            message='Не надано даних для оновлення',
         )
 
     try:
@@ -79,13 +79,13 @@ def update_current_user() -> tuple[Response, int]:
     except ValidationError as e:
         return create_response(
             status_code=400,
-            message='Invalid input',
+            message='Неправильні вхідні дані',
             details=e.errors()
         )
     except Exception as e:
         return create_response(
             status_code=500,
-            message='Internal server error',
+            message='Помилка сервера',
             details=str(e)
         )
 
@@ -97,12 +97,12 @@ def update_current_user() -> tuple[Response, int]:
         if existing_user.email == validated_data.email:
             return create_response(
                 status_code=400,
-                message='User with this email already exists'
+                message='Користувач з цією електронною поштою вже існує'
             )
         if existing_user.username == validated_data.username:
             return create_response(
                 status_code=400,
-                message='User with this username already exists'
+                message='Користувач з цим іменем користувача вже існує'
             )
 
     update_data = validated_data.model_dump(exclude_unset=True)
@@ -115,7 +115,7 @@ def update_current_user() -> tuple[Response, int]:
     if no_changes:
         return create_response(
             status_code=400,
-            message='In one or more fields, no changes were made',
+            message='Відсутні зміни для оновлення в одному з полів або в усіх',
         )
 
     try:
@@ -126,12 +126,12 @@ def update_current_user() -> tuple[Response, int]:
         db.session.rollback()
         return create_response(
             status_code=500,
-            message='Database error',
+            message='Помилка бази даних',
             details=str(e)
         )
 
     return create_response(
         status_code=200,
-        message='User updated successfully',
+        message='Користувач успішно оновлений',
         data=user.to_dict()
     )

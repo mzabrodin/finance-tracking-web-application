@@ -33,7 +33,7 @@ def create_category() -> tuple[Response, int]:
     user_id = get_jwt_identity()
     data = request.get_json()
     if not data:
-        return create_response(400, message='No input data provided')
+        return create_response(400, message='Не надано даних для створення категорії')
 
     try:
         validated_data = CategoryCreateSchema(**data)
@@ -47,12 +47,12 @@ def create_category() -> tuple[Response, int]:
         db.session.add(new_category)
         db.session.commit()
 
-        return create_response(201, 'Category created successfully', new_category.to_dict())
+        return create_response(201, 'Категорію успішно створено', new_category.to_dict())
     except ValidationError as e:
-        return create_response(400, 'Invalid input', details=e.errors())
+        return create_response(400, 'Неправильні вхідні дані', details=e.errors())
     except SQLAlchemyError as e:
         db.session.rollback()
-        return create_response(500, 'Database error', details=str(e))
+        return create_response(500, 'Помилка бази даних', details=str(e))
 
 
 @categories.route('/', methods=['GET'])
@@ -67,7 +67,7 @@ def get_categories() -> tuple[Response, int]:
     """
     user_id = get_jwt_identity()
     user_categories = Category.query.filter_by(user_id=user_id).all()
-    return create_response(200, 'Categories retrieved successfully',
+    return create_response(200, 'Категорії успішно отримані',
                            [category.to_dict() for category in user_categories])
 
 
@@ -88,8 +88,8 @@ def get_category(category_id: int) -> tuple[Response, int]:
     category = Category.query.filter_by(id=category_id, user_id=user_id).first()
 
     if not category:
-        return create_response(404, 'Category not found or access denied')
-    return create_response(200, 'Category retrieved successfully', category.to_dict())
+        return create_response(404, 'Категорію не знайдено або доступ заборонено')
+    return create_response(200, 'Категорія успішно отримана', category.to_dict())
 
 
 @categories.route('/<int:category_id>', methods=['PUT'])
@@ -112,27 +112,27 @@ def update_category(category_id: int) -> tuple[Response, int]:
     user_id = get_jwt_identity()
     category = Category.query.filter_by(id=category_id, user_id=user_id).first()
     if not category:
-        return create_response(404, 'Category not found or access denied')
+        return create_response(404, 'Категорію не знайдено або доступ заборонено')
 
     data = request.get_json()
     if not data:
-        return create_response(400, 'No input data provided')
+        return create_response(400, 'Не надано даних для оновлення категорії')
 
     try:
         validated_data = CategoryUpdateSchema(**data).model_dump(exclude_unset=True)
         if not validated_data:
-            return create_response(400, 'No fields to update')
+            return create_response(400, 'Дані для оновлення категорії не надано')
 
         for key, value in validated_data.items():
             setattr(category, key, value)
 
         db.session.commit()
-        return create_response(200, 'Category updated successfully', category.to_dict())
+        return create_response(200, 'Категорія успішно оновлена', category.to_dict())
     except ValidationError as e:
-        return create_response(400, 'Invalid input', details=e.errors())
+        return create_response(400, 'Неправильні вхідні дані', details=e.errors())
     except SQLAlchemyError as e:
         db.session.rollback()
-        return create_response(500, 'Database error', details=str(e))
+        return create_response(500, 'Помилка бази даних', details=str(e))
 
 
 @categories.route('/<int:category_id>', methods=['DELETE'])
@@ -151,16 +151,16 @@ def delete_category(category_id: int) -> tuple[Response, int]:
     user_id = get_jwt_identity()
     category = Category.query.filter_by(id=category_id, user_id=user_id).first()
     if not category:
-        return create_response(404, 'Category not found or access denied')
+        return create_response(404, 'Категорію не знайдено або доступ заборонено')
 
     transactions_exist = Transaction.query.filter_by(category_id = category_id).first()
     if transactions_exist:
-        return create_response(400, 'Cannot delete category with existing transactions')
+        return create_response(400, 'Не можливо видалити категорію, оскільки вона містить транзакції')
 
     try:
         db.session.delete(category)
         db.session.commit()
-        return create_response(200, 'Category deleted successfully')
+        return create_response(200, 'Категорію успішно видалено')
     except SQLAlchemyError as e:
         db.session.rollback()
-        return create_response(500, 'Database error', details=str(e))
+        return create_response(500, 'Помилка бази даних', details=str(e))
