@@ -646,3 +646,8 @@
     font-size: 16px;
   }
 }
+
+.calculator-icon.forecast {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffcc02 100%);
+  color: #f57c00;
+}

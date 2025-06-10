@@ -86,7 +86,7 @@ const CategoriesPage = () => {
       errors.description = 'Опис має містити від 3 до 200 символів';
     }
 
-    if (!data.type || !['incomes', 'expenses'].includes(data.type)) {
+    if (!editingCategory && (!data.type || !['incomes', 'expenses'].includes(data.type))) {
       errors.type = 'Оберіть тип категорії (Доходи або Витрати)';
     }
 
@@ -137,7 +137,7 @@ const CategoriesPage = () => {
       const cleanData = {
         name: data.name.trim(),
         description: data.description.trim() || null,
-        type: data.type,
+        type: editingCategory ? editingCategory.type : data.type,
       };
 
       if (editingCategory) {
@@ -231,17 +231,21 @@ const CategoriesPage = () => {
             />
             {formErrors.name && <div className="error-text">{formErrors.name}</div>}
 
-            <label>ТИП</label>
-            <select
-              name="type"
-              value={editingCategory ? editingCategory.type : newCategory.type}
-              onChange={handleInputChange}
-            >
-              <option value="">Оберіть тип</option>
-              <option value="incomes">Доходи</option>
-              <option value="expenses">Витрати</option>
-            </select>
-            {formErrors.type && <div className="error-text">{formErrors.type}</div>}
+            {!editingCategory && (
+              <>
+                <label>ТИП</label>
+                <select
+                  name="type"
+                  value={newCategory.type}
+                  onChange={handleInputChange}
+                >
+                  <option value="">Оберіть тип</option>
+                  <option value="incomes">Доходи</option>
+                  <option value="expenses">Витрати</option>
+                </select>
+                {formErrors.type && <div className="error-text">{formErrors.type}</div>}
+              </>
+            )}
 
             <label>ОПИС</label>
             <input

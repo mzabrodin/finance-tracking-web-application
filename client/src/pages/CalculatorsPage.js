@@ -559,6 +559,108 @@ const TaxCalculator = () => {
   );
 };
 
+const BalanceForecastCalculator = () => {
+  const [formData, setFormData] = useState({
+    forecast_months: ''
+  });
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/api/calculators/balance-forecast`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          forecast_months: parseInt(formData.forecast_months)
+        })
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setResult(data.data);
+      } else {
+        throw new Error(data.message || 'Помилка обчислення');
+      }
+    } catch (error) {
+      console.error('Помилка:', error);
+      alert(error.message || 'Помилка обчислення');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="calculator-card">
+      <div className="calculator-header">
+        <div className="calculator-icon forecast">📈</div>
+        <h3 className="calculator-title">Прогноз балансу</h3>
+      </div>
+      <form className="calculator-form" onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label>Кількість місяців для прогнозу</label>
+          <input
+            type="number"
+            min="1"
+            max="120"
+            value={formData.forecast_months}
+            onChange={(e) => setFormData({...formData, forecast_months: e.target.value})}
+            placeholder="12"
+            required
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={loading}
+          className="calculate-btn"
+        >
+          {loading ? (
+            <>
+              <div className="loading-spinner"></div>
+              Обчислення...
+            </>
+          ) : (
+            'Розрахувати прогноз'
+          )}
+        </button>
+      </form>
+      {result && (
+        <div className="calculator-result">
+          <div className="result-header">Прогноз балансу</div>
+          <div className="result-value positive">
+            {result.forecasted_balance.toLocaleString('uk-UA')} грн
+          </div>
+          <div className="result-details">
+            <div className="result-detail">
+              <span className="result-label">Поточний баланс:</span>
+              <span className="result-amount">{result.current_balance.toLocaleString('uk-UA')} грн</span>
+            </div>
+            <div className="result-detail">
+              <span className="result-label">Середні доходи на місяць:</span>
+              <span className="result-amount positive">{result.avg_monthly_income.toLocaleString('uk-UA')} грн</span>
+            </div>
+            <div className="result-detail">
+              <span className="result-label">Середні видатки на місяць:</span>
+              <span className="result-amount negative">{result.avg_monthly_expense.toLocaleString('uk-UA')} грн</span>
+            </div>
+            <div className="result-detail">
+              <span className="result-label">Щомісячний профіцит/дефіцит:</span>
+              <span className={`result-amount ${result.monthly_surplus >= 0 ? 'positive' : 'negative'}`}>
+                {result.monthly_surplus.toLocaleString('uk-UA')} грн
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const CalculatorsPage = () => {
   const [activeTab, setActiveTab] = useState('savings');
   const [showInfo, setShowInfo] = useState(false);
@@ -573,6 +675,8 @@ const CalculatorsPage = () => {
         return <PensionCalculator />;
       case 'tax':
         return <TaxCalculator />;
+         case 'forecast':
+      return <BalanceForecastCalculator />;
       default:
         return <SavingsCalculator />;
     }
@@ -640,6 +744,14 @@ const CalculatorsPage = () => {
                     Розрахуйте податки для ФОП 3-ї групи та чистий дохід після сплати податків і внесків.
                   </p>
                 </div>
+                <div className="info-item">
+  <h3>
+    <span className="info-icon">📈</span> Прогноз балансу
+  </h3>
+  <p>
+    Прогнозуйте свій майбутній баланс на основі історії доходів та витрат.
+  </p>
+</div>
               </div>
             </div>
           )}
@@ -673,6 +785,13 @@ const CalculatorsPage = () => {
               <span className="tab-icon">📊</span>
               Податки
             </button>
+            <button
+  className={`calculator-tab ${activeTab === 'forecast' ? 'active' : ''}`}
+  onClick={() => setActiveTab('forecast')}
+>
+  <span className="tab-icon">📈</span>
+  Прогноз
+</button>
           </div>
 
           {renderCalculator()}
