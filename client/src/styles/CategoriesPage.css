@@ -179,3 +179,16 @@ h1 {
 .new-category-form .cancel-button:hover {
   background-color: #555;
 }
+
+select {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.categories-table th:nth-child(2),
+.categories-table td:nth-child(2) {
+  width: 20%;
+}
+

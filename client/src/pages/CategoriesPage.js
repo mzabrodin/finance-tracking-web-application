@@ -7,10 +7,10 @@ const CategoriesPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editingCategory, setEditingCategory] = useState(null);
-  const [newCategory, setNewCategory] = useState({ name: '', description: '' });
+  const [newCategory, setNewCategory] = useState({ name: '', description: '', type: '' });
   const [formErrors, setFormErrors] = useState({});
 
-  const API_BASE = 'http://localhost:5000/api'; //  `${API_URL}/api`
+  const API_BASE = 'http://localhost:5000/api'; // `${API_URL}/api`
   const apiCall = async (url, options = {}) => {
     try {
       const response = await fetch(url, {
@@ -86,6 +86,10 @@ const CategoriesPage = () => {
       errors.description = 'Опис має містити від 3 до 200 символів';
     }
 
+    if (!data.type || !['incomes', 'expenses'].includes(data.type)) {
+      errors.type = 'Оберіть тип категорії (Доходи або Витрати)';
+    }
+
     return errors;
   };
 
@@ -94,22 +98,30 @@ const CategoriesPage = () => {
     setNewCategory({
       name: category?.name || '',
       description: category?.description || '',
+      type: category?.type || '',
     });
     setFormErrors({});
   };
 
   const handleCancelEdit = () => {
     setEditingCategory(null);
-    setNewCategory({ name: '', description: '' });
+    setNewCategory({ name: '', description: '', type: '' });
     setFormErrors({});
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewCategory(prev => ({
-      ...prev,
-      [name]: value,
-    }));
+    if (editingCategory) {
+      setEditingCategory((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    } else {
+      setNewCategory((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const handleAddCategory = async (e) => {
@@ -125,16 +137,17 @@ const CategoriesPage = () => {
       const cleanData = {
         name: data.name.trim(),
         description: data.description.trim() || null,
+        type: data.type,
       };
 
       if (editingCategory) {
         const updatedCategory = await updateCategory(editingCategory.id, cleanData);
-        setCategories(prev =>
-          prev.map(cat => cat.id === editingCategory.id ? updatedCategory : cat)
+        setCategories((prev) =>
+          prev.map((cat) => (cat.id === editingCategory.id ? updatedCategory : cat))
         );
       } else {
         const newCategoryData = await createCategory(cleanData);
-        setCategories(prev => [...prev, newCategoryData]);
+        setCategories((prev) => [...prev, newCategoryData]);
       }
 
       handleCancelEdit();
@@ -150,7 +163,7 @@ const CategoriesPage = () => {
 
     try {
       await deleteCategory(id);
-      setCategories(prev => prev.filter(cat => cat.id !== id));
+      setCategories((prev) => prev.filter((cat) => cat.id !== id));
     } catch (err) {
       setError(err.message);
     }
@@ -170,12 +183,14 @@ const CategoriesPage = () => {
       <div className="content-container">
         <div className="categories-container">
           <h1>КАТЕГОРІЇ</h1>
+          {error && <div className="error-message">{error}</div>}
           <div className="categories-layout">
             <div className="categories-table">
               <table>
                 <thead>
                   <tr>
                     <th>НАЗВА</th>
+                    <th>ТИП</th>
                     <th>ОПИС</th>
                     <th>ДІЇ</th>
                   </tr>
@@ -184,6 +199,7 @@ const CategoriesPage = () => {
                   {categories.map((cat) => (
                     <tr key={cat.id}>
                       <td>{cat.name}</td>
+                      <td>{cat.type === 'incomes' ? 'Доходи' : 'Витрати'}</td>
                       <td>{cat.description}</td>
                       <td>
                         <i
@@ -213,14 +229,30 @@ const CategoriesPage = () => {
               onChange={handleInputChange}
               placeholder=""
             />
+            {formErrors.name && <div className="error-text">{formErrors.name}</div>}
+
+            <label>ТИП</label>
+            <select
+              name="type"
+              value={editingCategory ? editingCategory.type : newCategory.type}
+              onChange={handleInputChange}
+            >
+              <option value="">Оберіть тип</option>
+              <option value="incomes">Доходи</option>
+              <option value="expenses">Витрати</option>
+            </select>
+            {formErrors.type && <div className="error-text">{formErrors.type}</div>}
+
             <label>ОПИС</label>
             <input
               type="text"
               name="description"
-              value={editingCategory ? editingCategory.description : newCategory.description}
+              value={editingCategory ? editingCategory.description || '' : newCategory.description}
               onChange={handleInputChange}
               placeholder=""
             />
+            {formErrors.description && <div className="error-text">{formErrors.description}</div>}
+
             <div className="form-buttons">
               <button type="submit">{editingCategory ? 'Оновити' : 'ДОДАТИ'}</button>
               {editingCategory && (

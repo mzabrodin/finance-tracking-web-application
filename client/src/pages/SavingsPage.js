@@ -248,7 +248,7 @@ const BudgetApp = () => {
             </div>
           )}
           <div className="total-balance">
-            <h2> Загальний Баланс</h2>
+            <h2>Загальний Баланс</h2>
             <p>{formatCurrency(totalBalance)}</p>
           </div>
           <div className="action-buttons">
@@ -256,76 +256,96 @@ const BudgetApp = () => {
               onClick={() => { fetchBudgets(); fetchTotalBalance(); }}
               className="action-button refresh"
             >
-               Оновити
+              Оновити
+            </button>
+            <button
+              onClick={() => setShowCreateForm(true)}
+              className="action-button add"
+            >
+              Новий бюджет
             </button>
           </div>
           {showCreateForm && (
-            <div className="new-budget-form">
-              <h2>{editingBudget ? 'РЕДАГУВАТИ БЮДЖЕТ' : 'НОВИЙ БЮДЖЕТ'}</h2>
-              <form onSubmit={editingBudget ? updateBudget : createBudget}>
-                <label>📝 НАЗВА БЮДЖЕТУ</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  placeholder="Введіть назву бюджету (3-30 символів)"
-                  required
-                  minLength={3}
-                  maxLength={30}
-                />
-                <label>💵 ПОЧАТКОВА СУМА</label>
-                <input
-                  type="number"
-                  value={formData.initial}
-                  onChange={(e) => setFormData({...formData, initial: e.target.value})}
-                  placeholder="0.00"
-                  min="0"
-                  max="100000000"
-                  step="0.01"
-                  required
-                />
-                <label>ПОТОЧНА СУМА</label>
-                <input
-                  type="number"
-                  value={formData.current}
-                  onChange={(e) => setFormData({...formData, current: e.target.value})}
-                  placeholder="Залиште пустим для використання початкової суми"
-                  min="0"
-                  max="100000000"
-                  step="0.01"
-                />
-                <label> ЦІЛЬОВА СУМА (ОПЦІОНАЛЬНО)</label>
-                <input
-                  type="number"
-                  value={formData.goal}
-                  onChange={(e) => setFormData({...formData, goal: e.target.value})}
-                  placeholder="0.00"
-                  min="0"
-                  max="100000000"
-                  step="0.01"
-                />
-                <label> ДАТА СТВОРЕННЯ</label>
-                <input
-                  type="date"
-                  value={formData.created_at}
-                  onChange={(e) => setFormData({...formData, created_at: e.target.value})}
-                  required
-                />
-                <label> КІНЦЕВА ДАТА (ОПЦІОНАЛЬНО)</label>
-                <input
-                  type="date"
-                  value={formData.end_at}
-                  onChange={(e) => setFormData({...formData, end_at: e.target.value})}
-                />
-                <div className="form-buttons">
-                  <button type="submit" disabled={loading}>
-                    {loading ? ' Збереження...' : (editingBudget ? 'Оновити' : 'ДОДАТИ')}
-                  </button>
-                  <button type="button" className="cancel-button" onClick={resetForm}>
-                    Скасувати
-                  </button>
-                </div>
-              </form>
+            <div className="budget-form-modal">
+              <div className="modal-content">
+                <h2>{editingBudget ? 'РЕДАГУВАТИ БЮДЖЕТ' : 'НОВИЙ БЮДЖЕТ'}</h2>
+                <form onSubmit={editingBudget ? updateBudget : createBudget}>
+                  <div className="form-group">
+                    <label>📝 НАЗВА БЮДЖЕТУ</label>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      placeholder="Введіть назву бюджету (3-30 символів)"
+                      required
+                      minLength={3}
+                      maxLength={30}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>💵 ПОЧАТКОВА СУМА</label>
+                    <input
+                      type="number"
+                      value={formData.initial}
+                      onChange={(e) => setFormData({...formData, initial: e.target.value})}
+                      placeholder="0.00"
+                      min="0"
+                      max="100000000"
+                      step="0.01"
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>ПОТОЧНА СУМА</label>
+                    <input
+                      type="number"
+                      value={formData.current}
+                      onChange={(e) => setFormData({...formData, current: e.target.value})}
+                      placeholder="Залиште пустим для використання початкової суми"
+                      min="0"
+                      max="100000000"
+                      step="0.01"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>ЦІЛЬОВА СУМА (ОПЦІОНАЛЬНО)</label>
+                    <input
+                      type="number"
+                      value={formData.goal}
+                      onChange={(e) => setFormData({...formData, goal: e.target.value})}
+                      placeholder="0.00"
+                      min="0"
+                      max="100000000"
+                      step="0.01"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>ДАТА СТВОРЕННЯ</label>
+                    <input
+                      type="date"
+                      value={formData.created_at}
+                      onChange={(e) => setFormData({...formData, created_at: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>КІНЦЕВА ДАТА (ОПЦІОНАЛЬНО)</label>
+                    <input
+                      type="date"
+                      value={formData.end_at}
+                      onChange={(e) => setFormData({...formData, end_at: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-buttons">
+                    <button type="submit" disabled={loading}>
+                      {loading ? 'Збереження...' : (editingBudget ? 'Оновити' : 'ДОДАТИ')}
+                    </button>
+                    <button type="button" className="cancel-button" onClick={resetForm}>
+                      Скасувати
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           )}
           {selectedBudget && (
@@ -334,7 +354,7 @@ const BudgetApp = () => {
                 <h2>ДЕТАЛЬНІШЕ</h2>
                 <div className="modal-details">
                   <div className="detail-item">
-                    <span> Назва:</span>
+                    <span>Назва:</span>
                     <span>{selectedBudget.name}</span>
                   </div>
                   <div className="detail-item">
@@ -342,23 +362,23 @@ const BudgetApp = () => {
                     <span>{formatCurrency(selectedBudget.initial)}</span>
                   </div>
                   <div className="detail-item">
-                    <span> Поточна сума:</span>
+                    <span>Поточна сума:</span>
                     <span>{formatCurrency(selectedBudget.current)}</span>
                   </div>
                   <div className="detail-item">
-                    <span> Ціль:</span>
+                    <span>Ціль:</span>
                     <span>{selectedBudget.goal ? formatCurrency(selectedBudget.goal) : '—'}</span>
                   </div>
                   <div className="detail-item">
-                    <span> Створено:</span>
+                    <span>Створено:</span>
                     <span>{new Date(selectedBudget.created_at).toLocaleDateString('uk-UA')}</span>
                   </div>
                   <div className="detail-item">
-                    <span> Закінчується:</span>
+                    <span>Закінчується:</span>
                     <span>{selectedBudget.end_at ? new Date(selectedBudget.end_at).toLocaleDateString('uk-UA') : '—'}</span>
                   </div>
                   <div className="detail-item progress">
-                    <span> Прогрес:</span>
+                    <span>Прогрес:</span>
                     <div className="progress-bar">
                       <div
                         className="progress-fill"
@@ -370,13 +390,13 @@ const BudgetApp = () => {
                 </div>
                 <div className="modal-actions">
                   <button onClick={() => startEdit(selectedBudget)} className="action-button edit">
-                     Редагувати
+                    Редагувати
                   </button>
                   <button onClick={() => deleteBudget(selectedBudget.id)} className="action-button delete">
-                     Видалити
+                    Видалити
                   </button>
                   <button onClick={() => setSelectedBudget(null)} className="action-button close">
-                     Закрити
+                    Закрити
                   </button>
                 </div>
               </div>

@@ -7,6 +7,10 @@ import CategoriesPage from './pages/CategoriesPage';
 import TransactionsPage from './pages/TransactionsPage';
 import SavingsPage from './pages/SavingsPage';
 import CalculatorsPage from './pages/CalculatorsPage';
+import AnalyticsPage from './pages/AnalyticsPage';
+import HomePage from './pages/HomePage';
+
+
 
 
 function ProtectedRoute({ children }) {
@@ -34,8 +38,8 @@ function App() {
             path="/history"
             element={
               <ProtectedRoute>
-                <div>Сторінка історії (в розробці)</div>
-              </ProtectedRoute>
+               < HomePage />
+            </ProtectedRoute>
             }
           />
           <Route
@@ -74,7 +78,7 @@ function App() {
             path="/analytics"
             element={
               <ProtectedRoute>
-                <div>Сторінка аналітики (в розробці)</div>
+               <AnalyticsPage />
               </ProtectedRoute>
             }
           />
