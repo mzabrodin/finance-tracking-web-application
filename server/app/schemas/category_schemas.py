@@ -1,13 +1,14 @@
 """Represents the schema for category management, including validation rules."""
 
 from pydantic import BaseModel, constr
-from typing import Optional
+from typing import Optional, Literal
 
 
 class CategoryCreateSchema(BaseModel):
     """Schema for creating a new category."""
     name: constr(min_length=3, max_length=20)
     description: Optional[constr(min_length=3, max_length=200)] = None
+    type: Literal['incomes', 'expenses']
 
 
 class CategoryUpdateSchema(BaseModel):

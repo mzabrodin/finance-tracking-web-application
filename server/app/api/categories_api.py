@@ -5,6 +5,7 @@ from flask_jwt_extended import get_jwt_identity
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from app.models.category_model import Category
+from app.models.transaction_model import Transaction
 from app.schemas.category_schemas import CategoryCreateSchema, CategoryUpdateSchema
 from app.utils.decorators import logged_in_required
 from app.utils.extensions import db
@@ -24,6 +25,7 @@ def create_category() -> tuple[Response, int]:
     Provided data should be in JSON format with the following fields:
         - name (str): The name of the category, must be unique and between 3 and 20 characters.
         - description (str, optional): A brief description of the category, up to 200 characters.
+        - type (str): The type of the category, either 'incomes' or 'expenses'.
 
     Returns:
         tuple[Response, int]: A response object with a status code and message indicating the result of the creation attempt.
@@ -39,7 +41,8 @@ def create_category() -> tuple[Response, int]:
         new_category = Category(
             user_id=user_id,
             name=validated_data.name,
-            description=validated_data.description
+            description=validated_data.description,
+            type=validated_data.type
         )
         db.session.add(new_category)
         db.session.commit()
@@ -149,6 +152,10 @@ def delete_category(category_id: int) -> tuple[Response, int]:
     category = Category.query.filter_by(id=category_id, user_id=user_id).first()
     if not category:
         return create_response(404, 'Category not found or access denied')
+
+    transactions_exist = Transaction.query.filter_by(category_id = category_id).first()
+    if transactions_exist:
+        return create_response(400, 'Cannot delete category with existing transactions')
 
     try:
         db.session.delete(category)

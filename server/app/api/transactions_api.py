@@ -66,6 +66,13 @@ def create_transaction() -> tuple[Response, int]:
             message='Category not found for the user'
         )
 
+    if (category.type == 'expenses' and validated_data.type != 'expense') or (
+            category.type == 'incomes' and validated_data.type != 'income'):
+        return create_response(
+            status_code=400,
+            message='Category type does not match transaction type'
+        )
+
     budget_id = data.get('budget_id')
     budget = Budget.query.filter_by(id=budget_id, user_id=user_id).first()
     if not budget:
@@ -150,6 +157,13 @@ def update_transaction(transaction_id: int) -> tuple[Response, int]:
             return create_response(
                 status_code=404,
                 message='Category not found for the user'
+            )
+
+        if (category.type == 'expenses' and data.get('type') != 'expense') or (
+                category.type == 'incomes' and data.get('type') != 'income'):
+            return create_response(
+                status_code=400,
+                message='Category type does not match transaction type'
             )
 
     old_amount = transaction.amount
