@@ -1,8 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Sidebar from '../components/Sidebar';
-import '../styles/Sidebar.css';
+import '../styles/TransactionsPage.css';
 import { API_URL } from '../config';
+
+const BudgetGoalWarningModal = ({ isOpen, excessAmount, onConfirm, onCancel }) => {
+  if (!isOpen) return null;
+
+  const formatAmount = (amount) => {
+    return new Intl.NumberFormat('uk-UA', {
+      style: 'currency',
+      currency: 'UAH'
+    }).format(amount);
+  };
+
+  return (
+    <div className="transaction-modal">
+      <div className="transaction-form warning-modal">
+        <h2>Попередження про перевищення цілі</h2>
+        <p>
+          Сума доходу перевищує ціль бюджету на {formatAmount(excessAmount)}.
+        </p>
+        <div className="form-actions">
+          <button
+            type="button"
+            className="form-btn secondary"
+            onClick={onCancel}
+          >
+            Скасувати
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const TransactionsPage = () => {
   const [transactions, setTransactions] = useState([]);
@@ -11,6 +42,7 @@ const TransactionsPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('all'); // 'all', 'income', 'expense'
   const [formData, setFormData] = useState({
     amount: '',
     description: '',
@@ -18,6 +50,9 @@ const TransactionsPage = () => {
     category_id: '',
     budget_id: ''
   });
+  const [showWarningModal, setShowWarningModal] = useState(false);
+  const [warningData, setWarningData] = useState({ excessAmount: 0 });
+  const [pendingTransaction, setPendingTransaction] = useState(null);
 
   // Fetch data functions
   const fetchTransactions = async () => {
@@ -71,6 +106,27 @@ const TransactionsPage = () => {
     fetchData();
   }, []);
 
+  const checkBudgetGoal = (budgetId, newAmount, isEditing = false, originalAmount = 0) => {
+    const budget = budgets.find(b => b.id === parseInt(budgetId));
+    if (!budget || !budget.goal) return { isExceeded: false };
+
+    const budgetIncome = transactions
+      .filter(t => t.budget_id === parseInt(budgetId) && t.type === 'income')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const adjustedIncome = isEditing
+      ? budgetIncome - originalAmount + parseFloat(newAmount)
+      : budgetIncome + parseFloat(newAmount);
+
+    if (adjustedIncome > budget.goal) {
+      return {
+        isExceeded: true,
+        excessAmount: adjustedIncome - budget.goal
+      };
+    }
+    return { isExceeded: false };
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -79,26 +135,56 @@ const TransactionsPage = () => {
       return;
     }
 
-    try {
-      const transactionData = {
-        amount: parseFloat(formData.amount),
-        description: formData.description || null,
-        type: formData.type,
-        category_id: parseInt(formData.category_id),
-        budget_id: parseInt(formData.budget_id)
-      };
+    const transactionData = {
+      amount: parseFloat(formData.amount),
+      description: formData.description || null,
+      type: formData.type,
+      category_id: parseInt(formData.category_id),
+      budget_id: parseInt(formData.budget_id)
+    };
 
+    // Check budget goal if transaction is income
+    if (formData.type === 'income') {
+      const goalCheck = checkBudgetGoal(
+        formData.budget_id,
+        formData.amount,
+        !!editingTransaction,
+        editingTransaction?.amount || 0
+      );
+
+      if (goalCheck.isExceeded) {
+        setWarningData({ excessAmount: goalCheck.excessAmount });
+        setPendingTransaction(transactionData);
+        setShowWarningModal(true);
+        return;
+      }
+    }
+
+    await submitTransaction(transactionData);
+  };
+
+  const submitTransaction = async (transactionData) => {
+    try {
+      let response;
       if (editingTransaction) {
-        const response = await axios.put(
+        response = await axios.put(
           `${API_URL}/api/transactions/${editingTransaction.id}`,
           transactionData,
           { withCredentials: true }
         );
         if (response.data.status === 'success') {
           alert('Транзакція оновлена успішно!');
+          // Update transactions state with the updated transaction
+          setTransactions(prev =>
+            prev.map(t =>
+              t.id === editingTransaction.id
+                ? { ...t, ...transactionData }
+                : t
+            )
+          );
         }
       } else {
-        const response = await axios.post(
+        response = await axios.post(
           `${API_URL}/api/transactions/`,
           transactionData,
           { withCredentials: true }
@@ -117,11 +203,25 @@ const TransactionsPage = () => {
       });
       setShowForm(false);
       setEditingTransaction(null);
-      fetchTransactions();
+      setShowWarningModal(false);
+      setPendingTransaction(null);
+      // Fetch transactions to ensure data consistency
+      await fetchTransactions();
     } catch (error) {
       console.error('Error saving transaction:', error);
       alert(error.response?.data?.message || 'Помилка при збереженні транзакції');
     }
+  };
+
+  const handleWarningConfirm = () => {
+    if (pendingTransaction) {
+      submitTransaction(pendingTransaction);
+    }
+  };
+
+  const handleWarningCancel = () => {
+    setShowWarningModal(false);
+    setPendingTransaction(null);
   };
 
   const handleEdit = (transaction) => {
@@ -169,7 +269,7 @@ const TransactionsPage = () => {
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('uk-UA', {
       year: 'numeric',
-      month: 'long',
+      month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
@@ -183,338 +283,354 @@ const TransactionsPage = () => {
     }).format(amount);
   };
 
+  // Calculate totals
+  const totalIncome = transactions
+    .filter(t => t.type === 'income')
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const totalExpenses = transactions
+    .filter(t => t.type === 'expense')
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const accountBalance = totalIncome - totalExpenses;
+
+  const expenseRatio = totalIncome > 0 ? (totalExpenses / totalIncome) * 100 : 0;
+
+  // Filter transactions based on active tab
+  const filteredTransactions = transactions.filter(transaction => {
+    if (activeTab === 'all') return true;
+    return transaction.type === activeTab;
+  });
+
+  // Filter categories based on transaction type
+  const filteredCategories = categories.filter(category =>
+    formData.type === 'income' ? category.type === 'incomes' : category.type === 'expenses'
+  );
+
+  const handleCancel = () => {
+    setShowForm(false);
+    setEditingTransaction(null);
+    setFormData({
+      amount: '',
+      description: '',
+      type: 'expense',
+      category_id: '',
+      budget_id: ''
+    });
+  };
+
+  // Validate category_id during editing
+  useEffect(() => {
+    if (editingTransaction && formData.category_id) {
+      const selectedCategory = categories.find(cat => cat.id === parseInt(formData.category_id));
+      if (selectedCategory && selectedCategory.type !== (formData.type === 'income' ? 'incomes' : 'expenses')) {
+        setFormData(prev => ({ ...prev, category_id: '' }));
+      }
+    }
+  }, [formData.type, formData.category_id, editingTransaction, categories]);
+
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
-        <div>Завантаження...</div>
+      <div className="app-layout">
+        <Sidebar />
+        <div className="content-container">
+          <div className="loading-container">
+            <div>Завантаження...</div>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-        <Sidebar />
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-        <h1 style={{ margin: 0, color: '#333' }}>Транзакції</h1>
-        <button
-          onClick={() => {
-            setShowForm(true);
-            setEditingTransaction(null);
-            setFormData({
-              amount: '',
-              description: '',
-              type: 'expense',
-              category_id: '',
-              budget_id: ''
-            });
-          }}
-          style={{
-            backgroundColor: '#333',
-            color: 'white',
-            border: 'none',
-            padding: '10px 20px',
-            borderRadius: '5px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '5px'
-          }}
-        >
-          <span>+</span> Додати транзакцію
-        </button>
-      </div>
+    <div className="app-layout">
+      <Sidebar />
+      <div className="content-container">
+        <div className="transactions-container">
+          {/* Header */}
+          <div className="page-header">
+            <div>
+              <h1>ТРАНЗАКЦІЇ</h1>
+              <div className="page-subtitle">Керування витратами/доходом</div>
+            </div>
+            <button
+              className="add-transaction-btn"
+              onClick={() => {
+                setShowForm(true);
+                setEditingTransaction(null);
+                setFormData({
+                  amount: '',
+                  description: '',
+                  type: 'expense',
+                  category_id: '',
+                  budget_id: ''
+                });
+              }}
+            >
+              <span>+</span> НОВА ТРАНЗАКЦІЯ
+            </button>
+          </div>
 
-      {showForm && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            padding: '30px',
-            borderRadius: '10px',
-            width: '500px',
-            maxWidth: '90vw'
-          }}>
-            <h2 style={{ marginTop: 0 }}>
-              {editingTransaction ? 'Редагувати транзакцію' : 'Нова транзакція'}
-            </h2>
-            <form onSubmit={handleSubmit}>
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                  Сума *
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="1000000"
-                  value={formData.amount}
-                  onChange={(e) => setFormData({...formData, amount: e.target.value})}
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ddd',
-                    borderRadius: '5px',
-                    boxSizing: 'border-box'
-                  }}
-                  required
-                />
-              </div>
+          <div className="transactions-layout">
+            {/* Main Content */}
+            <div className="transactions-main">
+              <div className="transactions-section">
+                {/* Tabs */}
+                <div className="transactions-tabs">
+                  <button
+                    className={`transactions-tab ${activeTab === 'all' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('all')}
+                  >
+                    УСІ
+                  </button>
+                  <button
+                    className={`transactions-tab ${activeTab === 'income' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('income')}
+                  >
+                    ДОХОДИ
+                  </button>
+                  <button
+                    className={`transactions-tab ${activeTab === 'expense' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('expense')}
+                  >
+                    ВИТРАТИ
+                  </button>
+                </div>
 
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                  Опис
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ddd',
-                    borderRadius: '5px',
-                    boxSizing: 'border-box',
-                    minHeight: '80px'
-                  }}
-                  placeholder="Опис транзакції..."
-                />
-              </div>
+                {/* Transactions Table */}
+                <div className="transactions-table">
+                  {filteredTransactions.length === 0 ? (
+                    <div className="empty-state">
+                      <div className="icon">💳</div>
+                      <h3>Транзакцій поки немає</h3>
+                      <p>Додайте вашу першу транзакцію, щоб почати відстежувати фінанси</p>
+                    </div>
+                  ) : (
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Тип</th>
+                          <th>Опис</th>
+                          <th>Сума</th>
+                          <th>Категорія</th>
+                          <th>Бюджет</th>
+                          <th>Дата</th>
+                          <th>Дії</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredTransactions.map((transaction) => (
+                          <tr key={transaction.id}>
+                            <td>
+                              <div className={`transaction-type ${transaction.type}`}>
+                                <span>{transaction.type === 'income' ? '↗' : '↙'}</span>
+                                {transaction.type === 'income' ? 'Дохід' : 'Витрата'}
+                              </div>
+                            </td>
+                            <td>{transaction.description || 'Без опису'}</td>
+                            <td>
+                              <div className={`transaction-amount ${transaction.type}`}>
+                                {transaction.type === 'income' ? '+' : '-'}{formatAmount(transaction.amount)}
+                              </div>
+                            </td>
+                            <td>
+                              <span className="transaction-category">
+                                {getCategoryName(transaction.category_id)}
+                              </span>
+                            </td>
+                            <td>
+                              <span className="transaction-budget">
+                                {getBudgetName(transaction.budget_id)}
+                              </span>
+                            </td>
+                            <td>
+                              <div className="transaction-date">
+                                {formatDate(transaction.created_at)}
+                              </div>
+                            </td>
+                            <td>
+                              <div className="transaction-actions">
+                                <button
+                                  className="action-btn edit"
+                                  onClick={() => handleEdit(transaction)}
+                                  title="Редагувати"
+                                >
+                                  <i className="bx bx-edit"></i>
+                                </button>
+                                <button
+                                  className="action-btn delete"
+                                  onClick={() => handleDelete(transaction.id)}
+                                  title="Видалити"
+                                >
+                                  <i className="bx bx-trash"></i>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
 
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                  Тип *
-                </label>
-                <select
-                  value={formData.type}
-                  onChange={(e) => setFormData({...formData, type: e.target.value})}
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ddd',
-                    borderRadius: '5px',
-                    boxSizing: 'border-box'
-                  }}
-                  required
-                >
-                  <option value="expense">Витрата</option>
-                  <option value="income">Дохід</option>
-                </select>
-              </div>
-
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                  Категорія *
-                </label>
-                <select
-                  value={formData.category_id}
-                  onChange={(e) => setFormData({...formData, category_id: e.target.value})}
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ddd',
-                    borderRadius: '5px',
-                    boxSizing: 'border-box'
-                  }}
-                  required
-                >
-                  <option value="">Оберіть категорію</option>
-                  {categories.map(category => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                  Бюджет *
-                </label>
-                <select
-                  value={formData.budget_id}
-                  onChange={(e) => setFormData({...formData, budget_id: e.target.value})}
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ddd',
-                    borderRadius: '5px',
-                    boxSizing: 'border-box'
-                  }}
-                  required
-                >
-                  <option value="">Оберіть бюджет</option>
-                  {budgets.map(budget => (
-                    <option key={budget.id} value={budget.id}>
-                      {budget.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowForm(false);
-                    setEditingTransaction(null);
-                  }}
-                  style={{
-                    backgroundColor: '#333',
-                    color: 'white',
-                    border: 'none',
-                    padding: '10px 20px',
-                    borderRadius: '5px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Скасувати
-                </button>
-                <button
-                  type="submit"
-                  style={{
-                    backgroundColor: '#28a745',
-                    color: 'white',
-                    border: 'none',
-                    padding: '10px 20px',
-                    borderRadius: '5px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  {editingTransaction ? 'Оновити' : 'Створити'}
+                <button className="details-btn">
+                  ДЕТАЛЬНІШЕ
                 </button>
               </div>
-            </form>
+            </div>
+
+            {/* Sidebar */}
+            <div className="transactions-sidebar">
+              {/* Account Balance */}
+              <div className="account-balance">
+                <div className="balance-header">
+                  <div className="balance-title">
+                    <i className="bx bx-dollar-circle"></i>
+                    На рахунку:
+                  </div>
+                </div>
+                <div className="balance-amount">
+                  {formatAmount(accountBalance)}
+                </div>
+
+                <div className="balance-percentage">
+                  <div className="balance-percentage-label">
+                    ВІДНОШЕННЯ ВИТРАТ І НАДХОДЖЕНЬ:
+                  </div>
+                  <div className="balance-percentage-value">
+                    {expenseRatio.toFixed(1)}%
+                  </div>
+                </div>
+
+                <div className="balance-stats">
+                  <div className="balance-stat">
+                    <div className="balance-stat-label">
+                      <i className="bx bx-trending-up"></i>
+                      НАДХОДЖЕННЯ:
+                    </div>
+                    <div className="balance-stat-value">
+                      {formatAmount(totalIncome)}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="balance-stats">
+                  <div className="balance-stat">
+                    <div className="balance-stat-label">
+                      <i className="bx bx-trending-down"></i>
+                      ВИТРАТИ:
+                    </div>
+                    <div className="balance-stat-value">
+                      {formatAmount(totalExpenses)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      )}
 
-      <div style={{
-        backgroundColor: 'white',
-        borderRadius: '10px',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-        overflow: 'hidden'
-      }}>
-        {transactions.length === 0 ? (
-          <div style={{
-            padding: '40px',
-            textAlign: 'center',
-            color: '#666'
-          }}>
-            <div style={{ fontSize: '48px', marginBottom: '15px' }}>💳</div>
-            <h3 style={{ margin: '0 0 10px 0' }}>Транзакцій поки немає</h3>
-            <p style={{ margin: 0 }}>Додайте вашу першу транзакцію, щоб почати відстежувати фінанси</p>
-          </div>
-        ) : (
-          <div>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'auto 1fr auto auto auto auto auto',
-              gap: '15px',
-              padding: '20px',
-              backgroundColor: '#f8f9fa',
-              fontWeight: 'bold',
-              borderBottom: '1px solid #dee2e6'
-            }}>
-              <div>Тип</div>
-              <div>Опис</div>
-              <div>Сума</div>
-              <div>Категорія</div>
-              <div>Бюджет</div>
-              <div>Дата</div>
-              <div>Дії</div>
+        {/* Transaction Form Modal */}
+        {showForm && (
+          <div className="transaction-modal">
+            <div className="transaction-form">
+              <h2>
+                {editingTransaction ? 'Редагувати транзакцію' : 'Нова транзакція'}
+              </h2>
+              <form onSubmit={handleSubmit}>
+                <div className="form-group">
+                  <label>Сума *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="1000000"
+                    value={formData.amount}
+                    onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Опис</label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    placeholder="Введіть опис транзакції..."
+                    rows="3"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Тип *</label>
+                  <select
+                    value={formData.type}
+                    onChange={(e) => setFormData({...formData, type: e.target.value, category_id: ''})}
+                    required
+                  >
+                    <option value="expense">Витрата</option>
+                    <option value="income">Дохід</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Категорія *</label>
+                  <select
+                    value={formData.category_id}
+                    onChange={(e) => setFormData({...formData, category_id: e.target.value})}
+                    required
+                  >
+                    <option value="">Оберіть категорію</option>
+                    {filteredCategories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Бюджет *</label>
+                  <select
+                    value={formData.budget_id}
+                    onChange={(e) => setFormData({...formData, budget_id: e.target.value})}
+                    required
+                  >
+                    <option value="">Оберіть бюджет</option>
+                    {budgets.map((budget) => (
+                      <option key={budget.id} value={budget.id}>
+                        {budget.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-actions">
+                  <button
+                    type="button"
+                    className="form-btn secondary"
+                    onClick={handleCancel}
+                  >
+                    Скасувати
+                  </button>
+                  <button
+                    type="submit"
+                    className="form-btn primary"
+                  >
+                    {editingTransaction ? 'Оновити' : 'Створити'}
+                  </button>
+                </div>
+              </form>
             </div>
-            {transactions.map((transaction) => (
-              <div
-                key={transaction.id}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'auto 1fr auto auto auto auto auto',
-                  gap: '15px',
-                  padding: '20px',
-                  borderBottom: '1px solid #dee2e6',
-                  alignItems: 'center'
-                }}
-              >
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  color: transaction.type === 'income' ? '#28a745' : '#dc3545'
-                }}>
-                  <span>{transaction.type === 'income' ? '↗' : '↙'}</span>
-                  <span style={{ fontSize: '12px', textTransform: 'uppercase' }}>
-                    {transaction.type === 'income' ? 'Дохід' : 'Витрата'}
-                  </span>
-                </div>
-                <div>{transaction.description || 'Без опису'}</div>
-                <div style={{
-                  fontWeight: 'bold',
-                  color: transaction.type === 'income' ? '#28a745' : '#dc3545'
-                }}>
-                  {transaction.type === 'income' ? '+' : '-'}{formatAmount(transaction.amount)}
-                </div>
-                <div style={{
-                  backgroundColor: '#e9ecef',
-                  padding: '4px 8px',
-                  borderRadius: '12px',
-                  fontSize: '12px'
-                }}>
-                  {getCategoryName(transaction.category_id)}
-                </div>
-                <div style={{
-                  backgroundColor: '#e3f2fd',
-                  padding: '4px 8px',
-                  borderRadius: '12px',
-                  fontSize: '12px'
-                }}>
-                  {getBudgetName(transaction.budget_id)}
-                </div>
-                <div style={{ fontSize: '12px', color: '#666' }}>
-                  {formatDate(transaction.created_at)}
-                </div>
-                <div style={{ display: 'flex', gap: '5px' }}>
-                  <button
-                    onClick={() => handleEdit(transaction)}
-                    style={{
-                      backgroundColor: '#333',
-                      color: 'white',
-                      border: 'none',
-                      padding: '5px 10px',
-                      borderRadius: '3px',
-                      cursor: 'pointer',
-                      fontSize: '12px'
-                    }}
-                  >
-                    ✏️
-                  </button>
-                  <button
-                    onClick={() => handleDelete(transaction.id)}
-                    style={{
-                      backgroundColor: '#333',
-                      color: 'white',
-                      border: 'none',
-                      padding: '5px 10px',
-                      borderRadius: '3px',
-                      cursor: 'pointer',
-                      fontSize: '12px'
-                    }}
-                  >
-                    🗑️
-                  </button>
-                </div>
-              </div>
-            ))}
           </div>
         )}
+
+        <BudgetGoalWarningModal
+          isOpen={showWarningModal}
+          excessAmount={warningData.excessAmount}
+          onConfirm={handleWarningConfirm}
+          onCancel={handleWarningCancel}
+        />
       </div>
     </div>
   );

@@ -1,0 +1,213 @@
+@import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cuprum:ital,wght@0,400..700;1,400..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Oswald:wght@200..700&display=swap');
+@import url('https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css');
+
+.home-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.home-container .welcome-section {
+  margin-bottom: 40px;
+}
+
+.home-container .welcome-section h1 {
+  color: #000000;
+  font-family: "Oswald", sans-serif;
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  margin-bottom: 10px;
+}
+
+.home-container .welcome-section p {
+  font-family: "Cuprum", sans-serif;
+  font-size: 16px;
+  color: #666;
+}
+
+.home-container .dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.home-container .dashboard-card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  transition: transform 0.3s;
+}
+
+.home-container .dashboard-card:hover {
+  transform: translateY(-3px);
+}
+
+.home-container .dashboard-card.balance {
+  border-left: 4px solid #333;
+}
+
+.home-container .dashboard-card.income {
+  border-left: 4px solid #00C49F;
+}
+
+.home-container .dashboard-card.expense {
+  border-left: 4px solid #FF8042;
+}
+
+.home-container .card-icon {
+  font-size: 30px;
+  margin-right: 15px;
+}
+
+.home-container .card-content {
+  flex: 1;
+}
+
+.home-container .card-label {
+  font-family: "Oswald", sans-serif;
+  font-size: 14px;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.home-container .card-value {
+  font-family: "Oswald", sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+}
+
+.home-container .recent-transactions h2 {
+  font-family: "Oswald", sans-serif;
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.home-container .transactions-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.home-container .transactions-table th,
+.home-container .transactions-table td {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.home-container .transactions-table th {
+  background-color: #f5f5f5;
+  font-family: "Oswald", sans-serif;
+  font-size: 16px;
+  color: #333;
+  text-transform: uppercase;
+}
+
+.home-container .transactions-table td {
+  font-family: "Cuprum", sans-serif;
+  font-size: 16px;
+  color: #666;
+}
+
+.home-container .transaction-type.income {
+  color: #333;
+  font-weight: bold;
+}
+
+.home-container .transaction-type.expense {
+  color: #333;
+  font-weight: bold;
+}
+
+.home-container .transaction-amount.income {
+  color: #333;
+}
+
+.home-container .transaction-amount.expense {
+  color: #333;
+}
+
+.home-container .empty-state {
+  text-align: center;
+  padding: 40px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.home-container .empty-state .icon {
+  font-size: 50px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.home-container .empty-state p {
+  font-family: "Cuprum", sans-serif;
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.home-container .action-btn,
+.home-container .view-all-btn {
+  background: #333;
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-family: "Oswald", sans-serif;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.home-container .action-btn:hover,
+.home-container .view-all-btn:hover {
+  background: #555;
+  transform: translateY(-2px);
+}
+
+.home-container .view-all-btn {
+  display: block;
+  margin: 20px auto 0;
+}
+
+.home-container .loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100px;
+  font-family: "Cuprum", sans-serif;
+  font-size: 18px;
+  color: #666;
+}
+
+@media (max-width: 1024px) {
+  .home-container .welcome-section h1 {
+    font-size: 32px;
+  }
+
+  .home-container .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .home-container .transactions-table {
+    font-size: 14px;
+  }
+
+  .home-container .transactions-table th,
+  .home-container .transactions-table td {
+    padding: 10px;
+  }
+}
