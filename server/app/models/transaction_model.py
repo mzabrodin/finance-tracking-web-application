@@ -1,12 +1,16 @@
+"""Represents db.Model for the transaction table."""
+
 from sqlalchemy import (Numeric, CheckConstraint, Column, BigInteger, ForeignKey, Text, DateTime, func)
 from sqlalchemy.dialects.postgresql import ENUM
 
 from app.utils.extensions import db
 
 transaction_type_enum = ENUM('income', 'expense', name='transaction_type', create_type=False)
+"""Transaction type enum for categorizing transactions as income or expense."""
 
 
 class Transaction(db.Model):
+    """Represents the transaction table in the database with all constraints and relationships."""
     __tablename__ = 'transaction'
     __table_args__ = (
         CheckConstraint("amount >= 0 AND amount <= 1000000", name="transaction_amount_check"),
@@ -34,6 +38,7 @@ class Transaction(db.Model):
     budget = db.relationship('Budget', backref='transactions')
 
     def to_dict(self):
+        """Converts the Transaction instance to a dictionary representation."""
         return {
             'id': self.id,
             'user_id': self.user_id,

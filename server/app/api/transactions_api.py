@@ -1,11 +1,12 @@
+"""API endpoints for managing transactions."""
+
 from decimal import Decimal
 
-from flask import Blueprint, request
+from flask import Blueprint, request, Response
 from flask_jwt_extended import get_jwt_identity
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.api import budgets
 from app.models.budget_model import Budget
 from app.models.category_model import Category
 from app.models.transaction_model import Transaction
@@ -15,11 +16,25 @@ from app.utils.extensions import db
 from app.utils.responses import create_response
 
 transactions = Blueprint('transactions', __name__)
+"""Blueprint for transaction-related API endpoints."""
 
 
 @transactions.route('/', methods=('POST',))
 @logged_in_required
-def create_transaction():
+def create_transaction() -> tuple[Response, int]:
+    """Create a new transaction for the authenticated user.
+
+    This endpoint creates a new transaction associated with a specific budget and category.
+
+    Provided data should be in JSON format with the following fields:
+        - amount (float): The amount of the transaction in the range of 0 to 1,000,000.
+        - description (str, optional): A description of the transaction (3-200 characters).
+        - created_at (datetime, optional): The date and time of the transaction. Defaults to the current time.
+        - type (str): The type of transaction, either 'income' or 'expense'.
+
+    Returns:
+        tuple[Response, int]: A tuple containing the response object and the HTTP status code after processing the request.
+    """
     user_id = get_jwt_identity()
     data = request.get_json()
     if not data:
@@ -97,7 +112,21 @@ def create_transaction():
 
 @transactions.route('/<int:transaction_id>', methods=('PUT',))
 @logged_in_required
-def update_transaction(transaction_id):
+def update_transaction(transaction_id: int) -> tuple[Response, int]:
+    """Update an existing transaction for the authenticated user.
+
+    This endpoint updates a transaction associated with a specific budget and category.
+
+    Provided data should be in JSON format with the following fields:
+        - amount (float): The new amount of the transaction in the range of 0 to 1,000,000.
+        - description (str, optional): A new description of the transaction (3-200 characters).
+        - created_at (datetime, optional): The new date and time of the transaction.
+        - type (str): The new type of transaction, either 'income' or 'expense'.
+        - category_id (int, optional): The ID of the category to associate with the transaction.
+
+    Returns:
+        tuple[Response, int]: A tuple containing the response object and the HTTP status code after processing the request.
+    """
     user_id = get_jwt_identity()
     data = request.get_json()
     if not data:
@@ -182,9 +211,18 @@ def update_transaction(transaction_id):
 
 @transactions.route('/<int:transaction_id>', methods=('DELETE',))
 @logged_in_required
-def delete_transaction(transaction_id):
-    user_id = get_jwt_identity()
+def delete_transaction(transaction_id: int) -> tuple[Response, int]:
+    """Delete a transaction for the authenticated user.
 
+    This endpoint deletes a transaction associated with a specific budget and category by its ID and updates the budget accordingly.
+
+    Args:
+        transaction_id (int): The ID of the transaction to delete.
+
+    Returns:
+        tuple[Response, int]: A tuple containing the response object and the HTTP status code after processing the request.
+    """
+    user_id = get_jwt_identity()
     if not transaction_id:
         return create_response(
             status_code=400,
@@ -224,7 +262,14 @@ def delete_transaction(transaction_id):
 
 @transactions.route('/', methods=('GET',))
 @logged_in_required
-def get_transactions():  # all transactions for the user
+def get_transactions() -> tuple[Response, int]:
+    """Retrieve all transactions for the authenticated user.
+
+    This endpoint retrieves all transactions associated with the authenticated user, sorted by creation date in descending order.
+
+    Returns:
+        tuple[Response, int]: A tuple containing the response object and the HTTP status code after processing the request.
+    """
     user_id = get_jwt_identity()
     transactions = Transaction.query.filter_by(user_id=user_id).all()
     transactions.sort(key=lambda x: x.created_at, reverse=True)
@@ -263,7 +308,17 @@ def get_transaction(transaction_id):  # get a specific transaction by ID of the 
 
 @transactions.route('/incomes/<int:budget_id>', methods=('GET',))
 @logged_in_required
-def get_incomes_by_budget(budget_id):
+def get_incomes_by_budget(budget_id: int) -> tuple[Response, int]:
+    """Retrieve all income transactions for a specific budget of the authenticated user.
+
+    This endpoint retrieves all income transactions associated with a specific budget, sorted by creation date in descending order.
+
+    Args:
+        budget_id (int): The ID of the budget for which to retrieve income transactions.
+
+    Returns:
+        tuple[Response, int]: A tuple containing the response object and the HTTP status code after processing the request.
+    """
     user_id = get_jwt_identity()
     transactions = Transaction.query.filter_by(user_id=user_id, budget_id=budget_id, type='income').all()
     transactions.sort(key=lambda x: x.created_at, reverse=True)
@@ -287,7 +342,17 @@ def get_incomes_by_budget(budget_id):
 
 @transactions.route('/expenses/<int:budget_id>', methods=('GET',))
 @logged_in_required
-def get_expenses_by_budget(budget_id):
+def get_expenses_by_budget(budget_id: int) -> tuple[Response, int]:
+    """Retrieve all expense transactions for a specific budget of the authenticated user.
+
+    This endpoint retrieves all expense transactions associated with a specific budget, sorted by creation date in descending order.
+
+    Args:
+        budget_id (int): The ID of the budget for which to retrieve expense transactions.
+
+    Returns:
+        tuple[Response, int]: A tuple containing the response object and the HTTP status code after processing the request.
+    """
     user_id = get_jwt_identity()
     transactions = Transaction.query.filter_by(user_id=user_id, budget_id=budget_id, type='expense').all()
     transactions.sort(key=lambda x: x.created_at, reverse=True)
@@ -308,9 +373,21 @@ def get_expenses_by_budget(budget_id):
         }
     )
 
+
 @transactions.route('/category/<int:category_id>', methods=('GET',))
 @logged_in_required
-def get_transactions_by_category(category_id):
+def get_transactions_by_category(category_id: int) -> tuple[Response, int]:
+    """Retrieve all transactions for a specific category of the authenticated user.
+
+    This endpoint retrieves all transactions associated with a specific category, sorted by creation date in descending order.
+
+    Args:
+        category_id (int): The ID of the category for which to retrieve transactions.
+
+    Returns:
+        tuple[Response, int]: A tuple containing the response object and the HTTP status code after processing the request.
+
+    """
     user_id = get_jwt_identity()
     transactions = Transaction.query.filter_by(user_id=user_id, category_id=category_id).all()
     transactions.sort(key=lambda x: x.created_at, reverse=True)

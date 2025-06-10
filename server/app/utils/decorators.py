@@ -1,8 +1,8 @@
-from functools import wraps
+"""Decorators to control access to routes based on user authentication and roles."""
 
+from functools import wraps
 from flask import make_response
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt, unset_jwt_cookies
-
 from app.models.user_model import User
 from app.utils.responses import create_response
 
@@ -41,6 +41,7 @@ def logged_in_required(f):
 
 def user_type_required(*user_type_allowed: str):
     """Decorator to ensure the user has one of the allowed user types.
+
     This decorator checks the user's type from the JWT claims and ensures it matches
     one of the specified allowed types. If not, it returns a 403 Forbidden response.
     Args:

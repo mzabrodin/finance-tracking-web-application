@@ -1,4 +1,6 @@
-from flask import Blueprint, make_response, request
+"""API endpoints for managing users."""
+
+from flask import Blueprint, make_response, request, Response
 from flask_jwt_extended import get_jwt_identity, unset_jwt_cookies, get_jwt
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
@@ -10,11 +12,19 @@ from app.utils.extensions import db
 from app.utils.responses import create_response
 
 users = Blueprint('users', __name__)
+"""Blueprint for user-related API endpoints."""
 
 
 @users.route('/me', methods=('GET',))
 @logged_in_required
-def get_current_user():
+def get_current_user() -> tuple[Response, int] | Response:
+    """Retrieve the current user's information.
+
+    This endpoint returns the details of the currently authenticated user.
+
+    Returns:
+        Response: A response object containing the user's information or an error message.
+    """
     user_id = get_jwt_identity()
     user = User.query.get(user_id)
 
@@ -37,7 +47,23 @@ def get_current_user():
 
 @users.route('/', methods=('PUT',))
 @logged_in_required
-def update_current_user():
+def update_current_user() -> tuple[Response, int]:
+    """Update the current user's information.
+
+    This endpoint allows the authenticated user to update their profile information.
+
+    Provided data should be in JSON format with the following fields:
+        - username (str, optional): The new username for the user.
+        - email (str, optional): The new email address for the user.
+        - user_type (str, optional): The new user type (default, premium, admin).
+
+    Restrictions:
+        - The email and username must be unique across all users.
+        - If no changes are made, an error is returned.
+
+    Returns:
+        tuple[Response, int]: A tuple containing the response object and the HTTP status code.
+    """
     user_id = get_jwt_identity()
     user = User.query.get(user_id)
 

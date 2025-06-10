@@ -1,3 +1,5 @@
+"""Custom methods for creating standardized JSON responses in Flask applications."""
+
 from flask import jsonify, Response
 
 

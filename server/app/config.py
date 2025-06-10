@@ -1,3 +1,10 @@
+"""Contains configuration settings for the Flask application.
+
+This module loads environment variables from a `.env` file and sets up
+configuration options for the Flask application, including database settings,
+JWT settings, and other application-specific configurations.
+"""
+
 import os
 from dotenv import load_dotenv
 
@@ -5,6 +12,11 @@ load_dotenv()
 
 
 class Config:
+    """Base configuration class for the Flask application.
+
+    This class loads environment variables and sets default values for
+    various configuration options used throughout the application.
+    """
     SECRET_KEY = os.getenv('FLASK_SECRET_KEY', 'dev')
     DEBUG = os.getenv('DEBUG', '0') == '1'
     FLASK_DEBUG = os.getenv('FLASK_DEBUG', '0') == '1'

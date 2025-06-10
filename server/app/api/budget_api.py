@@ -1,9 +1,10 @@
+"""API for budget management."""
+
 import datetime
 
-from flask import Blueprint, request, make_response
+from flask import Blueprint, request, make_response, Response
 from flask_jwt_extended import get_jwt_identity
 from pydantic import ValidationError
-from pydantic.v1 import PydanticValueError
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.models.budget_model import Budget
@@ -13,13 +14,20 @@ from app.utils.extensions import db
 from app.utils.responses import create_response
 
 budgets = Blueprint('budgets', __name__)
+"""Blueprint for budget-related API endpoints."""
 
 
 @budgets.route('/', methods=('GET',))
 @logged_in_required
-def get_budgets():
-    user_id = get_jwt_identity()
+def get_budgets() -> tuple[Response, int] | Response:
+    """Retrieve all budgets for the logged-in user.
 
+    This endpoint fetches all budgets associated with the currently authenticated user.
+
+    Returns:
+        tuple[Response, int] | Response: A response object containing the status code, message, and list of budgets if found.
+    """
+    user_id = get_jwt_identity()
     try:
         result_budgets = Budget.query.filter_by(user_id=user_id).all()
         budget_list = [budget.to_dict() for budget in result_budgets]
@@ -45,9 +53,18 @@ def get_budgets():
 
 @budgets.route('/<int:budget_id>', methods=('GET',))
 @logged_in_required
-def get_budget(budget_id):
-    user_id = get_jwt_identity()
+def get_budget(budget_id: int) -> tuple[Response, int] | Response:
+    """Retrieve a specific budget by its ID for the logged-in user.
 
+    This endpoint fetches a budget associated with the currently authenticated user by its ID.
+
+    Args:
+        budget_id (int): The ID of the budget to retrieve. It must be provided in the URL path.
+
+    Returns:
+        tuple[Response, int] | Response: A response object containing the status code, message, and budget details if found.
+    """
+    user_id = get_jwt_identity()
     if not budget_id:
         return create_response(
             status_code=400,
@@ -78,9 +95,29 @@ def get_budget(budget_id):
 
 @budgets.route('/', methods=('POST',))
 @logged_in_required
-def create_budget():
-    user_id = get_jwt_identity()
+def create_budget() -> tuple[Response, int] | Response:
+    """Create a new budget for the logged-in user.
 
+    This endpoint allows the user to create a new budget by providing the necessary details in JSON format.
+
+    Provided data should be in JSON format with the following fields:
+        - name (str): The name of the budget, must be between 3 and 30 characters.
+        - initial (float): The initial amount for the budget, must be between 0 and 100,000,000.
+        - current (float): The current amount for the budget, defaults to initial if not provided. Must be between 0 and 100,000,000.
+        - goal (float, optional): The goal amount for the budget, must be greater than or equal to current if provided. Must be between 0 and 100,000,000.
+        - created_at (date, optional): The date when the budget was created, defaults to today if not provided.
+        - end_at (date, optional): The end date for the budget, must be in the future or today if provided.
+
+    Restrictions for provided data:
+        - The 'goal' and 'end_at' fields must be provided together if either is specified.
+        - The 'current' field defaults to the value of 'initial' if not provided.
+        - The 'goal' must be greater than or equal to the 'current'.
+        - The 'end_at' date must be greater than or equal to the 'created_at' date and cannot be in the past.
+
+    Returns:
+        tuple[Response, int] | Response: A response object with a status code and message indicating the result of the budget creation.
+    """
+    user_id = get_jwt_identity()
     data = request.get_json()
     if not data:
         return create_response(
@@ -132,7 +169,31 @@ def create_budget():
 
 @budgets.route('/<int:budget_id>', methods=('PUT',))
 @logged_in_required
-def update_budget(budget_id):
+def update_budget(budget_id: int) -> tuple[Response, int] | Response:
+    """Update an existing budget for the logged-in user.
+
+    This endpoint allows the user to update an existing budget by providing the budget ID and the new details in JSON format.
+
+    Args:
+        budget_id (int): The ID of the budget to update. It must be provided in the URL path.
+
+    Provided data should be in JSON format with the following fields:
+        - name (str): The name of the budget, must be between 3 and 30 characters.
+        - initial (float): The initial amount for the budget, must be between 0 and 100,000,000.
+        - current (float): The current amount for the budget, defaults to initial if not provided. Must be between 0 and 100,000,000.
+        - goal (float, optional): The goal amount for the budget, must be greater than or equal to current if provided. Must be between 0 and 100,000,000.
+        - created_at (date, optional): The date when the budget was created, defaults to today if not provided.
+        - end_at (date, optional): The end date for the budget, must be in the future or today if provided.
+
+    Restrictions for provided data:
+        - The 'goal' and 'end_at' fields must be provided together if either is specified.
+        - The 'current' field defaults to the value of 'initial' if not provided.
+        - The 'goal' must be greater than or equal to the 'current'.
+        - The 'end_at' date must be greater than or equal to the 'created_at' date and cannot be in the past.
+
+    Returns:
+        tuple[Response, int] | Response: A response object with a status code and message indicating the result of the budget update.
+    """
     user_id = get_jwt_identity()
     if not budget_id:
         return create_response(
@@ -192,9 +253,18 @@ def update_budget(budget_id):
 
 @budgets.route('/<int:budget_id>', methods=('DELETE',))
 @logged_in_required
-def delete_budget(budget_id):
-    user_id = get_jwt_identity()
+def delete_budget(budget_id: int) -> tuple[Response, int] | Response:
+    """Delete a budget for the logged-in user.
 
+    This endpoint allows the user to delete a budget by providing the budget ID in the URL path.
+
+    Args:
+        budget_id (int): The ID of the budget to delete. It must be provided in the URL path.
+
+    Returns:
+        tuple[Response, int] | Response: A response object with a status code and message indicating the result of the budget deletion.
+    """
+    user_id = get_jwt_identity()
     if not budget_id:
         return create_response(
             status_code=400,
@@ -235,9 +305,15 @@ def delete_budget(budget_id):
 
 @budgets.route('/balance', methods=('GET',))
 @logged_in_required
-def get_budget_balance():
-    user_id = get_jwt_identity()
+def get_budget_balance() -> tuple[Response, int] | Response:
+    """Retrieve the total balance of all budgets for the logged-in user.
 
+    This endpoint calculates the total balance by summing the current amounts of all budgets associated with the user.
+
+    Returns:
+        tuple[Response, int] | Response: A response object containing the status code, message, and total balance if successful.
+    """
+    user_id = get_jwt_identity()
     try:
         res_budgets = Budget.query.filter_by(user_id=user_id).all()
         total_balance = sum(budget.current for budget in res_budgets)
@@ -254,11 +330,21 @@ def get_budget_balance():
         data={'total_balance': total_balance}
     ))
 
+
 @budgets.route('/<int:budget_id>/plan', methods=('GET',))
 @logged_in_required
-def get_budget_plan(budget_id):
-    user_id = get_jwt_identity()
+def get_budget_plan(budget_id: int) -> tuple[Response, int] | Response:
+    """Retrieve the daily budget plan for a specific budget.
 
+    This endpoint calculates the daily budget plan based on the goal, current amount, and end date of the specified budget.
+
+    Args:
+        budget_id (int): The ID of the budget for which to retrieve the plan. It must be provided in the URL path.
+
+    Returns:
+        tuple[Response, int] | Response: A response object containing the status code, message, and daily budget plan if successful.
+    """
+    user_id = get_jwt_identity()
     if not budget_id:
         return create_response(
             status_code=400,

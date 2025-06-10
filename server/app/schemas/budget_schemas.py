@@ -1,9 +1,12 @@
+"""Represents the schema for budget management, including validation rules."""
+
 from datetime import date, datetime
 from typing import Optional
 from pydantic import BaseModel, Field, model_validator, field_validator, constr
 
 
 class BudgetSchema(BaseModel):
+    """Schema for budget management with validation rules."""
     name: constr(min_length=3, max_length=30)
     initial: float = Field(..., ge=0, le=100_000_000)
     current: float = Field(None, ge=0, le=100_000_000)
@@ -14,12 +17,14 @@ class BudgetSchema(BaseModel):
     @model_validator(mode='before')
     @classmethod
     def set_current_default(cls, values):
+        """Set default value for 'current' if not provided."""
         if 'current' not in values or values['current'] is None:
             values['current'] = values.get('initial')
         return values
 
     @model_validator(mode='after')
     def validate_constraints(self):
+        """Validate constraints after all fields are set."""
         if (self.goal is not None and self.end_at is None) or (self.end_at is not None and self.goal is None):
             raise ValueError("Both 'goal' and 'end_at' must be provided together")
 
@@ -40,6 +45,7 @@ class BudgetSchema(BaseModel):
     @field_validator('created_at', 'end_at', mode='before')
     @classmethod
     def ensure_date(cls, v):
+        """Ensure that the value is a date object or a valid ISO date string."""
         if v is None:
             return v
         if isinstance(v, datetime):

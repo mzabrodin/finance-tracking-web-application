@@ -1,9 +1,12 @@
+"""Represents db.Model for the category table."""
+
 from sqlalchemy import (CheckConstraint, Column, BigInteger, ForeignKey, Text)
 from sqlalchemy.orm import relationship
 from app.utils.extensions import db
 
 
 class Category(db.Model):
+    """Represents the category table in the database with all constraints and relationships."""
     __tablename__ = 'category'
     __table_args__ = (
         CheckConstraint("char_length(name) > 2 AND char_length(name) <= 20",
@@ -22,6 +25,7 @@ class Category(db.Model):
     user = relationship('User', backref='categories')
 
     def to_dict(self):
+        """Converts the Category instance to a dictionary representation."""
         return {
             'id': self.id,
             'user_id': self.user_id,

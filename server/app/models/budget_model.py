@@ -1,9 +1,12 @@
+"""Represents db.Model for the budget table."""
+
 from sqlalchemy import (Numeric, CheckConstraint, Column, BigInteger, ForeignKey, Text, Date, text)
 from sqlalchemy.orm import relationship
 from app.utils.extensions import db
 
 
 class Budget(db.Model):
+    """Represents the budget table in the database with all constraints and relationships."""
     __tablename__ = 'budget'
     __table_args__ = (
         CheckConstraint("char_length(name) > 2 AND char_length(name) <= 30",
@@ -36,6 +39,7 @@ class Budget(db.Model):
     user = relationship('User', backref='budgets', )
 
     def to_dict(self):
+        """Converts the Budget instance to a dictionary representation."""
         result = {
             'id': self.id,
             'user_id': self.user_id,

@@ -1,15 +1,29 @@
-from flask import Blueprint, request
+"""API endpoints for managing calculators such as savings, credit, pension, tax for FOP, and balance forecast."""
+
+from flask import Blueprint, request, Response
 from pydantic import ValidationError
 from app.utils.decorators import logged_in_required
 from app.utils.responses import create_response
-from app.schemas.calculator_schemas import SavingsSchema, CreditSchema, PensionSchema, TaxFopSchema, BalanceForecastSchema
+from app.schemas.calculator_schemas import SavingsSchema, CreditSchema, PensionSchema, TaxFopSchema, \
+    BalanceForecastSchema
 
 calculators = Blueprint('calculators', __name__)
+"""Blueprint for calculators API endpoints."""
 
 
 @calculators.route('/savings', methods=['POST'])
 @logged_in_required
-def calculate_savings():
+def calculate_savings() -> tuple[Response, int]:
+    """Calculate the final amount of savings based on initial sum, annual interest rate, and term in months.
+
+    Provided data should be in JSON format with the following fields:
+        - initial_sum (float): Initial amount of savings. Must be non-negative.
+        - term_months (int): Term in months. Must be between 1 and 120.
+        - annual_rate (float): Annual interest rate in percentage. Must be between 0 and 100.
+
+    Returns:
+        tuple[Response, int]: A tuple containing the response object and the HTTP status code.
+    """
     data = request.get_json()
     if not data:
         return create_response(status_code=400, message='No input data provided')
@@ -35,7 +49,14 @@ def calculate_savings():
 
 @calculators.route('/credit', methods=['POST'])
 @logged_in_required
-def calculate_credit():
+def calculate_credit() -> tuple[Response, int]:
+    """Calculate the monthly payment, total payment, and overpayment and schedule for a credit.
+
+    Provided data should be in JSON format with the following fields:
+        - principal (float): The total amount of the credit. Must be greater than 0.
+        - annual_rate (float): Annual interest rate in percentage. Must be between 0 and 100.
+        - term_months (int): Credit term in months. Must be greater than 0.
+    """
     data = request.get_json()
     if not data:
         return create_response(status_code=400, message='No input data provided')
@@ -53,7 +74,7 @@ def calculate_credit():
         monthly_payment = P / n_payments
     else:
         monthly_payment = P * (monthly_rate * (1 + monthly_rate) ** n_payments) / (
-                    ((1 + monthly_rate) ** n_payments) - 1)
+                ((1 + monthly_rate) ** n_payments) - 1)
 
     total_payment = monthly_payment * n_payments
     total_overpayment = total_payment - P
@@ -86,7 +107,18 @@ def calculate_credit():
 
 @calculators.route('/pension', methods=['POST'])
 @logged_in_required
-def calculate_pension():
+def calculate_pension() -> tuple[Response, int]:
+    """Calculate the final amount of pension savings based on initial sum, monthly contribution, annual rate, and term in years.
+
+    Provided data should be in JSON format with the following fields:
+        - initial_sum (float): Initial amount of savings. Must be non-negative.
+        - monthly_contribution (float): Regular monthly contribution. Must be non-negative.
+        - annual_rate (float): Average annual rate of return in percentage. Must be between 0 and 100.
+        - term_years (int): Term of accumulation in years. Must be between 1 and 60.
+
+    Returns:
+        tuple[Response, int]: A tuple containing the response object and the HTTP status code.
+    """
     data = request.get_json()
     if not data:
         return create_response(status_code=400, message='No input data provided')
@@ -118,7 +150,17 @@ def calculate_pension():
 
 @calculators.route('/tax-fop', methods=['POST'])
 @logged_in_required
-def calculate_tax_fop():
+def calculate_tax_fop() -> tuple[Response, int]:
+    """Calculate the tax amount for FOP based on income and tax group.
+
+    Provided data should be in JSON format with the following fields:
+        - income (float): Total income amount. Must be non-negative.
+        - tax_group (int): Tax group for FOP (3 or 5).
+        - unified_social_contribution (float, optional): Unified Social Contribution amount. Must be non-negative if provided.
+
+    Returns:
+        tuple[Response, int]: A tuple containing the response object and the HTTP status code.
+    """
     data = request.get_json()
     if not data:
         return create_response(status_code=400, message='No input data provided')
