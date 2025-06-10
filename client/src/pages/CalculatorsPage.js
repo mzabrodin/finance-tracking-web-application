@@ -5,7 +5,6 @@ import '../styles/Sidebar.css';
 
 const API_URL = 'http://localhost:5000';
 
-// Компоненти калькуляторів (без змін)
 const SavingsCalculator = () => {
   const [formData, setFormData] = useState({
     initial_sum: '',
@@ -311,7 +310,14 @@ const PensionCalculator = () => {
 
       const data = await response.json();
       if (response.ok) {
-        setResult(data.data);
+        const totalContributions = parseFloat(formData.initial_sum || 0) +
+                                 (parseFloat(formData.monthly_contribution) * parseInt(formData.term_years) * 12);
+        const investmentIncome = data.data.final_amount - totalContributions;
+        setResult({
+          final_amount: data.data.final_amount,
+          total_contributions: totalContributions,
+          investment_income: investmentIncome
+        });
       } else {
         throw new Error(data.message || 'Помилка обчислення');
       }
@@ -331,7 +337,7 @@ const PensionCalculator = () => {
       </div>
       <form className="calculator-form" onSubmit={handleSubmit}>
         <div className="form-group">
-          <label>Початкова сума (грн) - необов'язково</label>
+          <label>Початкова сума (грн) - необов’язково</label>
           <input
             type="number"
             step="0.01"
@@ -417,10 +423,9 @@ const PensionCalculator = () => {
 
 const TaxCalculator = () => {
   const [formData, setFormData] = useState({
-    gross_salary: '',
-    tax_rate: '18',
-    military_tax: '1.5',
-    social_contribution: '22'
+    income: '',
+    tax_group: '3',
+    unified_social_contribution: ''
   });
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -429,23 +434,37 @@ const TaxCalculator = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/calculators/tax`, {
+      const body = {
+        income: parseFloat(formData.income),
+        tax_group: parseInt(formData.tax_group)
+      };
+      if (formData.unified_social_contribution) {
+        body.unified_social_contribution = parseFloat(formData.unified_social_contribution);
+      }
+
+      const response = await fetch(`${API_URL}/api/calculators/tax-fop`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({
-          gross_salary: parseFloat(formData.gross_salary),
-          tax_rate: parseFloat(formData.tax_rate),
-          military_tax: parseFloat(formData.military_tax),
-          social_contribution: parseFloat(formData.social_contribution)
-        })
+        body: JSON.stringify(body)
       });
 
       const data = await response.json();
       if (response.ok) {
-        setResult(data.data);
+        const taxAmount = data.data.tax_amount;
+        const unifiedSocialContribution = data.data.unified_social_contribution || 0;
+        const totalDeductions = data.data.total_tax || taxAmount;
+        const netIncome = parseFloat(formData.income) - totalDeductions;
+
+        setResult({
+          gross_income: parseFloat(formData.income),
+          tax_amount: taxAmount,
+          unified_social_contribution: unifiedSocialContribution,
+          total_deductions: totalDeductions,
+          net_income: netIncome
+        });
       } else {
         throw new Error(data.message || 'Помилка обчислення');
       }
@@ -461,55 +480,40 @@ const TaxCalculator = () => {
     <div className="calculator-card">
       <div className="calculator-header">
         <div className="calculator-icon tax">📊</div>
-        <h3 className="calculator-title">Податковий калькулятор</h3>
+        <h3 className="calculator-title">Податковий калькулятор ФОП</h3>
       </div>
       <form className="calculator-form" onSubmit={handleSubmit}>
         <div className="form-group">
-          <label>Валова зарплата (грн)</label>
+          <label>Дохід (грн)</label>
           <input
             type="number"
             step="0.01"
             min="0"
-            value={formData.gross_salary}
-            onChange={(e) => setFormData({...formData, gross_salary: e.target.value})}
+            value={formData.income}
+            onChange={(e) => setFormData({...formData, income: e.target.value})}
             placeholder="25000"
             required
           />
         </div>
         <div className="form-group">
-          <label>Податок на доходи (%)</label>
+          <label>Група оподаткування</label>
           <select
-            value={formData.tax_rate}
-            onChange={(e) => setFormData({...formData, tax_rate: e.target.value})}
+            value={formData.tax_group}
+            onChange={(e) => setFormData({...formData, tax_group: e.target.value})}
           >
-            <option value="18">18% (стандартна ставка)</option>
-            <option value="5">5% (для ФОП)</option>
+            <option value="3">3% (3-тя група)</option>
+            <option value="5">5% (3-тя група без ПДВ)</option>
           </select>
         </div>
         <div className="form-group">
-          <label>Військовий збір (%)</label>
+          <label>Єдиний соціальний внесок (грн) - необов’язково</label>
           <input
             type="number"
-            step="0.1"
+            step="0.01"
             min="0"
-            max="10"
-            value={formData.military_tax}
-            onChange={(e) => setFormData({...formData, military_tax: e.target.value})}
-            placeholder="1.5"
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>Соціальний внесок (%)</label>
-          <input
-            type="number"
-            step="0.1"
-            min="0"
-            max="30"
-            value={formData.social_contribution}
-            onChange={(e) => setFormData({...formData, social_contribution: e.target.value})}
-            placeholder="22"
-            required
+            value={formData.unified_social_contribution}
+            onChange={(e) => setFormData({...formData, unified_social_contribution: e.target.value})}
+            placeholder="1474"
           />
         </div>
         <button
@@ -531,29 +535,23 @@ const TaxCalculator = () => {
         <div className="calculator-result">
           <div className="result-header">Результат розрахунку</div>
           <div className="result-value positive">
-            {result.net_salary.toLocaleString('uk-UA')} грн
+            {result.net_income.toLocaleString('uk-UA')} грн
           </div>
           <div className="result-details">
             <div className="result-detail">
-              <span className="result-label">Валова зарплата:</span>
-              <span className="result-amount">{result.gross_salary.toLocaleString('uk-UA')} грн</span>
+              <span className="result-label">Валовий дохід:</span>
+              <span className="result-amount">{result.gross_income.toLocaleString('uk-UA')} грн</span>
             </div>
             <div className="result-detail">
-              <span className="result-label">Податок на доходи:</span>
-              <span className="result-amount negative">-{result.income_tax.toLocaleString('uk-UA')} грн</span>
+              <span className="result-label">Податок ({formData.tax_group}%):</span>
+              <span className="result-amount negative">-{result.tax_amount.toLocaleString('uk-UA')} грн</span>
             </div>
-            <div className="result-detail">
-              <span className="result-label">Військовий збір:</span>
-              <span className="result-amount negative">-{result.military_tax.toLocaleString('uk-UA')} грн</span>
-            </div>
-            <div className="result-detail">
-              <span className="result-label">Соціальний внесок:</span>
-              <span className="result-amount negative">-{result.social_contribution.toLocaleString('uk-UA')} грн</span>
-            </div>
-            <div className="result-detail">
-              <span className="result-label">Всього утримано:</span>
-              <span className="result-amount negative">-{result.total_deductions.toLocaleString('uk-UA')} грн</span>
-            </div>
+            {result.unified_social_contribution > 0 && (
+              <div className="result-detail">
+                <span className="result-label">Єдиний соціальний внесок:</span>
+                <span className="result-amount negative">-{result.unified_social_contribution.toLocaleString('uk-UA')} грн</span>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -631,16 +629,15 @@ const CalculatorsPage = () => {
                   </h3>
                   <p>
                     Плануйте своє пенсійне забезпечення, розраховуючи накопичення
-                    з урахуванням інфляції та дохідності інвестицій.
+                    з урахуванням регулярних внесків та дохідності.
                   </p>
                 </div>
                 <div className="info-item">
                   <h3>
-                    <span className="info-icon">📊</span> Податки
+                    <span className="info-icon">📊</span> Податки для ФОП
                   </h3>
                   <p>
-                    Розрахуйте чисту зарплату після сплати всіх обов'язкових
-                    податків та зборів в Україні.
+                    Розрахуйте податки для ФОП 3-ї групи та чистий дохід після сплати податків і внесків.
                   </p>
                 </div>
               </div>

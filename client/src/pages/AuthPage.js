@@ -77,9 +77,6 @@ function AuthPage() {
               />
               <i className="bx bxs-lock-alt"></i>
             </div>
-            <div className="forgot-link">
-              <a href="#">Забули пароль?</a>
-            </div>
             <button type="submit" className="auth-btn">Увійти</button>
           </form>
         </div>
