@@ -1,11 +1,16 @@
 """API endpoints for managing calculators such as savings, credit, pension, tax for FOP, and balance forecast."""
 
-from flask import Blueprint, request, Response
+from flask import Blueprint, request
+from flask_jwt_extended import get_jwt_identity
 from pydantic import ValidationError
+from sqlalchemy import func, extract
+from werkzeug.wrappers import Response
+from app.models.transaction_model import Transaction
+from app.models.budget_model import Budget
+from app.schemas.calculator_schemas import SavingsSchema, CreditSchema, PensionSchema, TaxFopSchema, BalanceForecastSchema
 from app.utils.decorators import logged_in_required
+from app.utils.extensions import db
 from app.utils.responses import create_response
-from app.schemas.calculator_schemas import SavingsSchema, CreditSchema, PensionSchema, TaxFopSchema, \
-    BalanceForecastSchema
 
 calculators = Blueprint('calculators', __name__)
 """Blueprint for calculators API endpoints."""
@@ -190,6 +195,61 @@ def calculate_tax_fop() -> tuple[Response, int]:
 
 @calculators.route('/balance-forecast', methods=['POST'])
 @logged_in_required
-def calculate_balance_forecast():
-    #TODO: This endpoint requires an implemented transaction system to fetch the user's average monthly income and expenses.
-    pass
+def calculate_balance_forecast() -> tuple[Response, int]:
+    """Calculates the future balance based on average monthly income and expenses.
+
+    This endpoint uses the user's transaction history to determine the average
+    monthly surplus or deficit and projects the future balance based on that.
+
+    The request body should be a JSON object with the following fields:
+        - forecast_months (int): The number of months to forecast into the future (1-120).
+
+    Returns:
+        tuple[Response, int]: A tuple containing the response object with the forecast details.
+    """
+    user_id = get_jwt_identity()
+    data = request.get_json()
+
+    try:
+        validated_data = BalanceForecastSchema(**data)
+        forecast_months = validated_data.forecast_months
+    except ValidationError as e:
+        return create_response(400, 'Invalid input', details=e.errors())
+
+    income_subquery = db.session.query(
+        func.sum(Transaction.amount).label('total')
+    ).filter(
+        Transaction.user_id == user_id,
+        Transaction.type == 'income'
+    ).group_by(
+        extract('year', Transaction.created_at),
+        extract('month', Transaction.created_at)
+    ).subquery()
+    avg_income_result = db.session.query(func.avg(income_subquery.c.total)).scalar()
+    avg_monthly_income = float(avg_income_result or 0)
+
+    expense_subquery = db.session.query(
+        func.sum(Transaction.amount).label('total')
+    ).filter(
+        Transaction.user_id == user_id,
+        Transaction.type == 'expense'
+    ).group_by(
+        extract('year', Transaction.created_at),
+        extract('month', Transaction.created_at)
+    ).subquery()
+    avg_expense_result = db.session.query(func.avg(expense_subquery.c.total)).scalar()
+    avg_monthly_expense = float(avg_expense_result or 0)
+
+    current_balance_result = db.session.query(func.sum(Budget.current)).filter(Budget.user_id == user_id).scalar()
+    current_balance = float(current_balance_result or 0)
+
+    monthly_surplus = avg_monthly_income - avg_monthly_expense
+    forecasted_balance = current_balance + (monthly_surplus * forecast_months)
+
+    return create_response(200, "Balance forecast calculated successfully", {
+        'current_balance': round(current_balance, 2),
+        'avg_monthly_income': round(avg_monthly_income, 2),
+        'avg_monthly_expense': round(avg_monthly_expense, 2),
+        'monthly_surplus': round(monthly_surplus, 2),
+        'forecasted_balance': round(forecasted_balance, 2)
+    })
