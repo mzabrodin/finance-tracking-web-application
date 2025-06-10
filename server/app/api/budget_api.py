@@ -276,7 +276,7 @@ def delete_budget(budget_id: int) -> tuple[Response, int] | Response:
     except SQLAlchemyError as e:
         return create_response(
             status_code=500,
-            message='Помилка бази даних',
+            message='Неможливо видалити бюджет до якого прив`зані транзакції ',
             details=str(e)
         )
 
@@ -293,7 +293,7 @@ def delete_budget(budget_id: int) -> tuple[Response, int] | Response:
         db.session.rollback()
         return create_response(
             status_code=500,
-            message='Помилка бази даних',
+            message='Неможливо видалити бюджет до якого прив`зані транзакції',
             details=str(e)
         )
 

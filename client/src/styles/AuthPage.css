@@ -171,6 +171,10 @@
   transition: .6s ease-in-out;
 }
 
+.auth-page .toggle-panel h1 {
+  color: #fff;
+}
+
 .auth-page .toggle-panel.toggle-left {
   left: 0;
   transition-delay: 1.2s;

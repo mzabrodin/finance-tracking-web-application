@@ -4,13 +4,15 @@ import '../styles/CategoriesPage.css';
 
 const CategoriesPage = () => {
   const [categories, setCategories] = useState([]);
+  const [filteredCategories, setFilteredCategories] = useState([]);
+  const [filterType, setFilterType] = useState('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editingCategory, setEditingCategory] = useState(null);
   const [newCategory, setNewCategory] = useState({ name: '', description: '', type: '' });
   const [formErrors, setFormErrors] = useState({});
 
-  const API_BASE = 'http://localhost:5000/api'; // `${API_URL}/api`
+  const API_BASE = 'http://localhost:5000/api';
   const apiCall = async (url, options = {}) => {
     try {
       const response = await fetch(url, {
@@ -39,6 +41,7 @@ const CategoriesPage = () => {
       setLoading(true);
       const response = await apiCall(`${API_BASE}/categories/`);
       setCategories(response.data || []);
+      setFilteredCategories(response.data || []);
       setError('');
     } catch (err) {
       setError(err.message);
@@ -72,6 +75,14 @@ const CategoriesPage = () => {
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    if (filterType === 'all') {
+      setFilteredCategories(categories);
+    } else {
+      setFilteredCategories(categories.filter((cat) => cat.type === filterType));
+    }
+  }, [filterType, categories]);
 
   const validateForm = (data) => {
     const errors = {};
@@ -184,6 +195,26 @@ const CategoriesPage = () => {
         <div className="categories-container">
           <h1>КАТЕГОРІЇ</h1>
           {error && <div className="error-message">{error}</div>}
+          <div className="filter-buttons">
+            <button
+              className={`filter-button ${filterType === 'all' ? 'active' : ''}`}
+              onClick={() => setFilterType('all')}
+            >
+              Усі
+            </button>
+            <button
+              className={`filter-button ${filterType === 'incomes' ? 'active' : ''}`}
+              onClick={() => setFilterType('incomes')}
+            >
+              Доходи
+            </button>
+            <button
+              className={`filter-button ${filterType === 'expenses' ? 'active' : ''}`}
+              onClick={() => setFilterType('expenses')}
+            >
+              Витрати
+            </button>
+          </div>
           <div className="categories-layout">
             <div className="categories-table">
               <table>
@@ -196,7 +227,7 @@ const CategoriesPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {categories.map((cat) => (
+                  {filteredCategories.map((cat) => (
                     <tr key={cat.id}>
                       <td>{cat.name}</td>
                       <td>{cat.type === 'incomes' ? 'Доходи' : 'Витрати'}</td>

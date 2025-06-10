@@ -50,7 +50,6 @@ h1 {
   overflow-x: auto;
 }
 
-
 .categories-table table {
   width: 100%;
   border-collapse: collapse;
@@ -87,20 +86,46 @@ h1 {
 }
 
 .categories-table .edit-icon {
-    color: #333;
+  color: #333;
 }
 
 .categories-table .edit-icon:hover {
   color: #333;
-  }
+}
 
 .categories-table .delete-icon {
   color: #333;
-  }
+}
 
 .categories-table .delete-icon:hover {
   color: #333;
-  }
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.filter-button {
+  padding: 10px 20px;
+  background-color: #666;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-family: "Oswald", sans-serif;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.filter-button:hover {
+  background-color: #555;
+}
+
+.filter-button.active {
+  background-color: #000;
+}
 
 .new-category-form {
   width: 420px;
@@ -187,8 +212,16 @@ select {
   border: 1px solid #ccc;
   border-radius: 4px;
 }
+
 .categories-table th:nth-child(2),
 .categories-table td:nth-child(2) {
   width: 20%;
 }
 
+.error-text {
+  color: #ff0000;
+  font-family: "Cuprum", sans-serif;
+  font-size: 14px;
+  margin-top: -10px;
+  margin-bottom: 10px;
+}

@@ -130,7 +130,7 @@ const TransactionsPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.amount || !formData.category_id || (!editingTransaction && !formData.budget_id)) {
+    if (!formData.amount || !formData.category_id || !formData.budget_id) {
       alert('Будь ласка, заповніть всі обов\'язкові поля');
       return;
     }
@@ -140,13 +140,13 @@ const TransactionsPage = () => {
       description: formData.description || null,
       type: formData.type,
       category_id: parseInt(formData.category_id),
-      budget_id: editingTransaction ? editingTransaction.budget_id : parseInt(formData.budget_id)
+      budget_id: parseInt(formData.budget_id)
     };
 
     // Check budget goal if transaction is income
     if (formData.type === 'income') {
       const goalCheck = checkBudgetGoal(
-        transactionData.budget_id,
+        formData.budget_id,
         formData.amount,
         !!editingTransaction,
         editingTransaction?.amount || 0
@@ -165,26 +165,17 @@ const TransactionsPage = () => {
 
   const submitTransaction = async (transactionData) => {
     try {
-      let response;
       if (editingTransaction) {
-        response = await axios.put(
+        const response = await axios.put(
           `${API_URL}/api/transactions/${editingTransaction.id}`,
           transactionData,
           { withCredentials: true }
         );
         if (response.data.status === 'success') {
           alert('Транзакція оновлена успішно!');
-          // Update transactions state with the updated transaction
-          setTransactions(prev =>
-            prev.map(t =>
-              t.id === editingTransaction.id
-                ? { ...t, ...transactionData }
-                : t
-            )
-          );
         }
       } else {
-        response = await axios.post(
+        const response = await axios.post(
           `${API_URL}/api/transactions/`,
           transactionData,
           { withCredentials: true }
@@ -205,8 +196,7 @@ const TransactionsPage = () => {
       setEditingTransaction(null);
       setShowWarningModal(false);
       setPendingTransaction(null);
-      // Fetch transactions to ensure data consistency
-      await fetchTransactions();
+      fetchTransactions();
     } catch (error) {
       console.error('Error saving transaction:', error);
       alert(error.response?.data?.message || 'Помилка при збереженні транзакції');
@@ -302,11 +292,6 @@ const TransactionsPage = () => {
     return transaction.type === activeTab;
   });
 
-  // Filter categories based on transaction type
-  const filteredCategories = categories.filter(category =>
-    formData.type === 'income' ? category.type === 'incomes' : category.type === 'expenses'
-  );
-
   const handleCancel = () => {
     setShowForm(false);
     setEditingTransaction(null);
@@ -318,16 +303,6 @@ const TransactionsPage = () => {
       budget_id: ''
     });
   };
-
-  // Validate category_id during editing
-  useEffect(() => {
-    if (editingTransaction && formData.category_id) {
-      const selectedCategory = categories.find(cat => cat.id === parseInt(formData.category_id));
-      if (selectedCategory && selectedCategory.type !== (formData.type === 'income' ? 'incomes' : 'expenses')) {
-        setFormData(prev => ({ ...prev, category_id: '' }));
-      }
-    }
-  }, [formData.type, formData.category_id, editingTransaction, categories]);
 
   if (loading) {
     return (
@@ -376,26 +351,26 @@ const TransactionsPage = () => {
             <div className="transactions-main">
               <div className="transactions-section">
                 {/* Tabs */}
-                <div className="transactions-tabs">
-                  <button
-                    className={`transactions-tab ${activeTab === 'all' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('all')}
-                  >
-                    УСІ
-                  </button>
-                  <button
-                    className={`transactions-tab ${activeTab === 'income' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('income')}
-                  >
-                    ДОХОДИ
-                  </button>
-                  <button
-                    className={`transactions-tab ${activeTab === 'expense' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('expense')}
-                  >
-                    ВИТРАТИ
-                  </button>
-                </div>
+<div className="transactions-tabs">
+  <button
+    className={`transactions-tab ${activeTab === 'all' ? 'active' : ''}`}
+    onClick={() => setActiveTab('all')}
+  >
+    УСІ
+  </button>
+  <button
+    className={`transactions-tab ${activeTab === 'income' ? 'active' : ''}`}
+    onClick={() => setActiveTab('income')}
+  >
+    ДОХОДИ
+  </button>
+  <button
+    className={`transactions-tab ${activeTab === 'expense' ? 'active' : ''}`}
+    onClick={() => setActiveTab('expense')}
+  >
+    ВИТРАТИ
+  </button>
+</div>
 
                 {/* Transactions Table */}
                 <div className="transactions-table">
@@ -561,19 +536,17 @@ const TransactionsPage = () => {
                   />
                 </div>
 
-                {!editingTransaction && (
-                  <div className="form-group">
-                    <label>Тип *</label>
-                    <select
-                      value={formData.type}
-                      onChange={(e) => setFormData({...formData, type: e.target.value, category_id: ''})}
-                      required
-                    >
-                      <option value="expense">Витрата</option>
-                      <option value="income">Дохід</option>
-                    </select>
-                  </div>
-                )}
+                <div className="form-group">
+                  <label>Тип *</label>
+                  <select
+                    value={formData.type}
+                    onChange={(e) => setFormData({...formData, type: e.target.value})}
+                    required
+                  >
+                    <option value="expense">Витрата</option>
+                    <option value="income">Дохід</option>
+                  </select>
+                </div>
 
                 <div className="form-group">
                   <label>Категорія *</label>
@@ -583,7 +556,7 @@ const TransactionsPage = () => {
                     required
                   >
                     <option value="">Оберіть категорію</option>
-                    {filteredCategories.map((category) => (
+                    {categories.map((category) => (
                       <option key={category.id} value={category.id}>
                         {category.name}
                       </option>
@@ -591,23 +564,21 @@ const TransactionsPage = () => {
                   </select>
                 </div>
 
-                {!editingTransaction && (
-                  <div className="form-group">
-                    <label>Бюджет *</label>
-                    <select
-                      value={formData.budget_id}
-                      onChange={(e) => setFormData({...formData, budget_id: e.target.value})}
-                      required
-                    >
-                      <option value="">Оберіть бюджет</option>
-                      {budgets.map((budget) => (
-                        <option key={budget.id} value={budget.id}>
-                          {budget.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+                <div className="form-group">
+                  <label>Бюджет *</label>
+                  <select
+                    value={formData.budget_id}
+                    onChange={(e) => setFormData({...formData, budget_id: e.target.value})}
+                    required
+                  >
+                    <option value="">Оберіть бюджет</option>
+                    {budgets.map((budget) => (
+                      <option key={budget.id} value={budget.id}>
+                        {budget.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
                 <div className="form-actions">
                   <button

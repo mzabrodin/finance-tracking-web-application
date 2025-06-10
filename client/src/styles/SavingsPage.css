@@ -196,7 +196,6 @@ h1 {
   width: 100%;
   height: 600px;
   overflow-y: auto;
-
   display: flex;
   flex-direction: column;
 }
@@ -270,6 +269,63 @@ h1 {
 
 .budget-form-modal .cancel-button:hover {
   background-color: #555;
+}
+
+.warning-modal,
+.transaction-warning-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+}
+
+.warning-modal .modal-content,
+.transaction-warning-modal .modal-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px 1px rgba(61, 61, 61, 0.25);
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  border-left: 5px solid #e53e3e; /* Warning color accent */
+}
+
+.warning-modal h2,
+.transaction-warning-modal h2 {
+  font-family: "Oswald", sans-serif;
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.warning-modal p,
+.transaction-warning-modal p {
+  font-family: "Cuprum", sans-serif;
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.warning-modal .form-buttons,
+.transaction-warning-modal .form-buttons {
+  display: flex;
+  justify-content: center;
+}
+
+.warning-modal .action-button,
+.transaction-warning-modal .action-button {
+  background-color: #000;
+  color: #fff;
+}
+
+.warning-modal .action-button:hover,
+.transaction-warning-modal .action-button:hover {
+  background-color: #333;
 }
 
 .budget-detail-modal {
@@ -360,7 +416,7 @@ h1 {
   transition: background-color 0.3s;
   width: 100%;
   margin-top: 20px;
-  margin-bottom:20px;
+  margin-bottom: 20px;
 }
 
 .detail-button:hover {
@@ -387,7 +443,6 @@ h1 {
   color: #fff;
   box-shadow: 0 2px 12px 1px rgba(61, 61, 61, 0.25);
   overflow: hidden;
-
 }
 
 .budget-card::before {

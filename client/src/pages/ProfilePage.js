@@ -39,18 +39,18 @@ function ProfilePage() {
     }
   };
 
-//  useEffect (() => {
-//    const fetchBalance = async () => {
-//    try{
-//      const response = await axios.get(`${API_URL}/api/budgets/balance`, { withCredentials: true });
-//      setBalance(response.data.data.total_balance);
-//    } catch (error){
-//      throw error.response?.data || error;
-//    }
-//  };
-//
-//  fetchBalance();
-//  }, []);
+  useEffect (() => {
+    const fetchBalance = async () => {
+    try{
+      const response = await axios.get(`${API_URL}/api/budgets/balance`, { withCredentials: true });
+      setBalance(response.data.data.total_balance);
+    } catch (error){
+      throw error.response?.data || error;
+    }
+  };
+
+  fetchBalance();
+  }, []);
 
 
   if (!user) return <div>Завантаження...</div>;

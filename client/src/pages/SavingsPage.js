@@ -15,6 +15,9 @@ const BudgetApp = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingBudget, setEditingBudget] = useState(null);
   const [selectedBudget, setSelectedBudget] = useState(null);
+  const [showWarningModal, setShowWarningModal] = useState(false);
+  const [showTransactionWarningModal, setShowTransactionWarningModal] = useState(false);
+  const [budgetToDelete, setBudgetToDelete] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     initial: '',
@@ -83,8 +86,17 @@ const BudgetApp = () => {
     }
   };
 
+  const validateForm = () => {
+    if (formData.goal && !formData.end_at) {
+      setShowWarningModal(true);
+      return false;
+    }
+    return true;
+  };
+
   const createBudget = async (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
     setLoading(true);
     try {
       const submitData = {
@@ -108,6 +120,7 @@ const BudgetApp = () => {
 
   const updateBudget = async (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
     setLoading(true);
     try {
       const submitData = {
@@ -129,15 +142,40 @@ const BudgetApp = () => {
     }
   };
 
+  const checkTransactions = async (budgetId) => {
+    try {
+      const response = await axios({
+        url: `${API_URL}/api/budgets/${budgetId}/transactions`,
+        method: 'GET',
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      return response.data.data && response.data.data.length > 0;
+    } catch (error) {
+      console.error('Помилка перевірки транзакцій:', error);
+      return false;
+    }
+  };
+
   const deleteBudget = async (id) => {
-    if (!window.confirm('Ви впевнені, що хочете видалити цей бюджет?')) return;
+    const confirmed = window.confirm('Ви впевнені, що хочете видалити цей бюджет?');
+    if (!confirmed) return;
+
     setLoading(true);
     try {
-      await apiCall(`/${id}`, { method: 'DELETE' });
-      setSuccess('Бюджет успішно видалено!');
-      fetchBudgets();
-      fetchTotalBalance();
-      setSelectedBudget(null);
+      const hasTransactions = await checkTransactions(id);
+      if (hasTransactions) {
+        setBudgetToDelete(id);
+        setShowTransactionWarningModal(true);
+      } else {
+        await apiCall(`/${id}`, { method: 'DELETE' });
+        setSuccess('Бюджет успішно видалено!');
+        fetchBudgets();
+        fetchTotalBalance();
+        setSelectedBudget(null);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -156,6 +194,8 @@ const BudgetApp = () => {
     });
     setShowCreateForm(false);
     setEditingBudget(null);
+    setShowWarningModal(false);
+    setShowTransactionWarningModal(false);
   };
 
   const startEdit = (budget) => {
@@ -345,6 +385,38 @@ const BudgetApp = () => {
                     </button>
                   </div>
                 </form>
+              </div>
+            </div>
+          )}
+          {showWarningModal && (
+            <div className="warning-modal">
+              <div className="modal-content">
+                <h2>ПОПЕРЕДЖЕННЯ</h2>
+                <p>Ви встановили цільову суму, але не вказали кінцеву дату. Будь ласка, вкажіть кінцеву дату для продовження.</p>
+                <div className="form-buttons">
+                  <button
+                    onClick={() => setShowWarningModal(false)}
+                    className="action-button"
+                  >
+                    Добре
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          {showTransactionWarningModal && (
+            <div className="transaction-warning-modal">
+              <div className="modal-content">
+                <h2>ПОПЕРЕДЖЕННЯ</h2>
+                <p>Неможливо видалити бюджет, оскільки він містить транзакції. Спочатку видаліть усі пов’язані транзакції.</p>
+                <div className="form-buttons">
+                  <button
+                    onClick={() => setShowTransactionWarningModal(false)}
+                    className="action-button"
+                  >
+                    Добре
+                  </button>
+                </div>
               </div>
             </div>
           )}
