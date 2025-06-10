@@ -34,7 +34,6 @@ const HomePage = () => {
         fetchBudgets(),
         fetchTotalBalance(),
       ]);
-      calculateTotals();
     } catch (error) {
       console.error('Помилка завантаження даних:', error);
     } finally {
@@ -46,7 +45,9 @@ const HomePage = () => {
     try {
       const response = await axios.get(`${API_URL}/api/transactions/`, { withCredentials: true });
       if (response.data.status === 'success') {
-        setTransactions(response.data.data || []);
+        const transactionsData = response.data.data || [];
+        setTransactions(transactionsData);
+        calculateTotals(transactionsData); // Викликаємо calculateTotals після оновлення transactions
       }
     } catch (error) {
       console.error('Помилка завантаження транзакцій:', error);
@@ -87,11 +88,11 @@ const HomePage = () => {
     }
   };
 
-  const calculateTotals = () => {
-    const income = transactions
+  const calculateTotals = (transactionsData) => {
+    const income = transactionsData
       .filter(t => t.type === 'income')
       .reduce((sum, t) => sum + (t.amount || 0), 0);
-    const expenses = transactions
+    const expenses = transactionsData
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + (t.amount || 0), 0);
     setTotalIncome(income);
@@ -167,7 +168,6 @@ const HomePage = () => {
               <div className="card-content">
                 <div className="card-label">Загальний баланс</div>
                 <div className="card-value">{formatAmount(totalBalance)}</div>
-
               </div>
             </div>
             <div className="dashboard-card income">
