@@ -1,83 +1,168 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import { useAuth } from '../context/AuthContext';
-import { API_URL } from '../config';
 import Sidebar from '../components/Sidebar';
 import '../styles/CategoriesPage.css';
 
-function CategoriesPage() {
-  const { user } = useAuth();
-  const navigate = useNavigate();
+const CategoriesPage = () => {
   const [categories, setCategories] = useState([]);
-  const [newCategory, setNewCategory] = useState({ name: '', description: '' });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [editingCategory, setEditingCategory] = useState(null);
+  const [newCategory, setNewCategory] = useState({ name: '', description: '' });
+  const [formErrors, setFormErrors] = useState({});
 
-  useEffect(() => {
-    if (!user) return;
-    const exampleCategories = [
-      { id: 1, name: 'Продукти', description: 'Харчові продукти' },
-      { id: 2, name: 'Комунальні послуги', description: 'Платежі за світло, воду тощо' },
-      { id: 3, name: 'Розваги', description: 'Кіно, ігри, відпочинок' },
-    ];
-    setCategories(exampleCategories);
-  }, [user]);
+  const API_BASE = 'http://localhost:5000/api'; //  `${API_URL}/api`
+  const apiCall = async (url, options = {}) => {
+    try {
+      const response = await fetch(url, {
+        ...options,
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+      });
 
-  const handleInputChange = (e) => {
-    if (editingCategory) {
-      setEditingCategory({ ...editingCategory, [e.target.name]: e.target.value });
-    } else {
-      setNewCategory({ ...newCategory, [e.target.name]: e.target.value });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Помилка API');
+      }
+
+      return data;
+    } catch (err) {
+      throw new Error(err.message || 'Помилка мережі');
     }
   };
 
-  const handleAddCategory = async (e) => {
-    e.preventDefault();
-    if (editingCategory) {
-      try {
-        const updatedCategories = categories.map(cat =>
-          cat.id === editingCategory.id ? editingCategory : cat
-        );
-        setCategories(updatedCategories);
-        setEditingCategory(null);
-        toast.success('Категорію оновлено');
-      } catch (error) {
-        toast.error('Помилка при оновленні категорії');
-      }
-    } else {
-      try {
-        const newCat = { id: categories.length + 1, ...newCategory };
-        setCategories([...categories, newCat]);
-        setNewCategory({ name: '', description: '' });
-        toast.success('Категорію додано');
-      } catch (error) {
-        toast.error('Помилка при додаванні категорії');
-      }
+  const fetchCategories = async () => {
+    try {
+      setLoading(true);
+      const response = await apiCall(`${API_BASE}/categories/`);
+      setCategories(response.data || []);
+      setError('');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const createCategory = async (categoryData) => {
+    const response = await apiCall(`${API_BASE}/categories/`, {
+      method: 'POST',
+      body: JSON.stringify(categoryData),
+    });
+    return response.data;
+  };
+
+  const updateCategory = async (id, categoryData) => {
+    const response = await apiCall(`${API_BASE}/categories/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(categoryData),
+    });
+    return response.data;
+  };
+
+  const deleteCategory = async (id) => {
+    await apiCall(`${API_BASE}/categories/${id}`, {
+      method: 'DELETE',
+    });
+  };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const validateForm = (data) => {
+    const errors = {};
+
+    if (!data.name || data.name.trim().length < 3) {
+      errors.name = 'Назва має містити мінімум 3 символи';
+    } else if (data.name.trim().length > 20) {
+      errors.name = 'Назва має містити максимум 20 символів';
+    }
+
+    if (data.description && (data.description.trim().length < 3 || data.description.trim().length > 200)) {
+      errors.description = 'Опис має містити від 3 до 200 символів';
+    }
+
+    return errors;
   };
 
   const handleEditCategory = (category) => {
     setEditingCategory(category);
-    setNewCategory({ name: '', description: '' }); // Clear the add form when switching to edit
-  };
-
-  const handleDeleteCategory = (id) => {
-    try {
-      const updatedCategories = categories.filter(cat => cat.id !== id);
-      setCategories(updatedCategories);
-      toast.success('Категорію видалено');
-    } catch (error) {
-      toast.error('Помилка при видаленні категорії');
-    }
+    setNewCategory({
+      name: category?.name || '',
+      description: category?.description || '',
+    });
+    setFormErrors({});
   };
 
   const handleCancelEdit = () => {
     setEditingCategory(null);
-    setNewCategory({ name: '', description: '' }); // Reset the form
+    setNewCategory({ name: '', description: '' });
+    setFormErrors({});
   };
 
-  if (!user) return <div>Завантаження...</div>;
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewCategory(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleAddCategory = async (e) => {
+    e.preventDefault();
+    const data = editingCategory || newCategory;
+    const errors = validateForm(data);
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+
+    try {
+      const cleanData = {
+        name: data.name.trim(),
+        description: data.description.trim() || null,
+      };
+
+      if (editingCategory) {
+        const updatedCategory = await updateCategory(editingCategory.id, cleanData);
+        setCategories(prev =>
+          prev.map(cat => cat.id === editingCategory.id ? updatedCategory : cat)
+        );
+      } else {
+        const newCategoryData = await createCategory(cleanData);
+        setCategories(prev => [...prev, newCategoryData]);
+      }
+
+      handleCancelEdit();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleDeleteCategory = async (id) => {
+    if (!window.confirm('Ви впевнені, що хочете видалити цю категорію?')) {
+      return;
+    }
+
+    try {
+      await deleteCategory(id);
+      setCategories(prev => prev.filter(cat => cat.id !== id));
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="app-layout">
@@ -149,6 +234,6 @@ function CategoriesPage() {
       </div>
     </div>
   );
-}
+};
 
 export default CategoriesPage;

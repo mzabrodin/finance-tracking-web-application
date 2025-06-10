@@ -40,7 +40,7 @@ function Sidebar() {
             </Link>
           </li>
           <li>
-            <Link to="/settings">
+            <Link to="/savings">
               <i className="bx bx-wallet"></i>
               <span className={isCollapsed ? 'hidden' : ''}>Накопичення</span>
             </Link>

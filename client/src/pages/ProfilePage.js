@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 import { API_URL } from '../config';
@@ -39,19 +39,19 @@ function ProfilePage() {
     }
   };
 
-  useEffect (() => {
-    const fetchBalance = async () => {
-    try{
-      const response = await axios.get(`${API_URL}/api/budgets/balance`, { withCredentials: true });
-      setBalance(response.data.data.total_balance);
-    } catch (error){
-      throw error.response?.data || error;
-    }
-  };
+//  useEffect (() => {
+//    const fetchBalance = async () => {
+//    try{
+//      const response = await axios.get(`${API_URL}/api/budgets/balance`, { withCredentials: true });
+//      setBalance(response.data.data.total_balance);
+//    } catch (error){
+//      throw error.response?.data || error;
+//    }
+//  };
+//
+//  fetchBalance();
+//  }, []);
 
-  fetchBalance();
-  }, []);
-  
 
   if (!user) return <div>Завантаження...</div>;
 

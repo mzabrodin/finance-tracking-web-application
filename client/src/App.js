@@ -4,6 +4,9 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import AuthPage from './pages/AuthPage';
 import ProfilePage from './pages/ProfilePage';
 import CategoriesPage from './pages/CategoriesPage';
+import TransactionsPage from './pages/TransactionsPage';
+import SavingsPage from './pages/SavingsPage';
+import CalculatorsPage from './pages/CalculatorsPage';
 
 
 function ProtectedRoute({ children }) {
@@ -36,18 +39,18 @@ function App() {
             }
           />
           <Route
-            path="/settings"
-            element={
-              <ProtectedRoute>
-                <div>Сторінка налаштувань (в розробці)</div>
-              </ProtectedRoute>
-            }
+            path="/savings"
+  element={
+    <ProtectedRoute>
+      <SavingsPage />
+    </ProtectedRoute>
+  }
           />
           <Route
             path="/calculator"
             element={
               <ProtectedRoute>
-                <div>Сторінка калькулятора (в розробці)</div>
+                <CalculatorsPage />
               </ProtectedRoute>
             }
           />
@@ -55,7 +58,7 @@ function App() {
             path="/transactions"
             element={
               <ProtectedRoute>
-                <div>Сторінка транзакцій (в розробці)</div>
+                <TransactionsPage />
               </ProtectedRoute>
             }
           />
