@@ -7,7 +7,8 @@ from sqlalchemy import func, extract
 from werkzeug.wrappers import Response
 from app.models.transaction_model import Transaction
 from app.models.budget_model import Budget
-from app.schemas.calculator_schemas import SavingsSchema, CreditSchema, PensionSchema, TaxFopSchema, BalanceForecastSchema
+from app.schemas.calculator_schemas import SavingsSchema, CreditSchema, PensionSchema, TaxFopSchema, \
+    BalanceForecastSchema
 from app.utils.decorators import logged_in_required
 from app.utils.extensions import db
 from app.utils.responses import create_response
@@ -31,12 +32,12 @@ def calculate_savings() -> tuple[Response, int]:
     """
     data = request.get_json()
     if not data:
-        return create_response(status_code=400, message='No input data provided')
+        return create_response(status_code=400, message='Не надано вхідних даних')
 
     try:
         validated_data = SavingsSchema(**data)
     except ValidationError as e:
-        return create_response(status_code=400, message='Invalid input', details=e.errors())
+        return create_response(status_code=400, message='Неправильні вхідні дані', details=e.errors())
 
     P = validated_data.initial_sum
     r = validated_data.annual_rate / 100.0
@@ -47,7 +48,7 @@ def calculate_savings() -> tuple[Response, int]:
 
     return create_response(
         status_code=200,
-        message='Savings calculated successfully',
+        message='Розрахунок заощаджень успішно виконано',
         data={'final_amount': round(final_amount, 2)}
     )
 
@@ -64,12 +65,12 @@ def calculate_credit() -> tuple[Response, int]:
     """
     data = request.get_json()
     if not data:
-        return create_response(status_code=400, message='No input data provided')
+        return create_response(status_code=400, message='Не надано вхідних даних')
 
     try:
         validated_data = CreditSchema(**data)
     except ValidationError as e:
-        return create_response(status_code=400, message='Invalid input', details=e.errors())
+        return create_response(status_code=400, message='Неправильні вхідні дані', details=e.errors())
 
     P = validated_data.principal
     monthly_rate = (validated_data.annual_rate / 100.0) / 12
@@ -100,7 +101,7 @@ def calculate_credit() -> tuple[Response, int]:
 
     return create_response(
         status_code=200,
-        message='Credit calculated successfully',
+        message='Кредит розраховано успішно',
         data={
             'monthly_payment': round(monthly_payment, 2),
             'total_payment': round(total_payment, 2),
@@ -126,12 +127,12 @@ def calculate_pension() -> tuple[Response, int]:
     """
     data = request.get_json()
     if not data:
-        return create_response(status_code=400, message='No input data provided')
+        return create_response(status_code=400, message='Не надано вхідних даних')
 
     try:
         validated_data = PensionSchema(**data)
     except ValidationError as e:
-        return create_response(status_code=400, message='Invalid input', details=e.errors())
+        return create_response(status_code=400, message='Неправильні вхідні дані', details=e.errors())
 
     P = validated_data.initial_sum
     C = validated_data.monthly_contribution
@@ -148,7 +149,7 @@ def calculate_pension() -> tuple[Response, int]:
 
     return create_response(
         status_code=200,
-        message='Pension savings calculated successfully',
+        message='Розрахунок пенсійних заощаджень успішно виконано',
         data={'final_amount': round(total_savings, 2)}
     )
 
@@ -168,12 +169,12 @@ def calculate_tax_fop() -> tuple[Response, int]:
     """
     data = request.get_json()
     if not data:
-        return create_response(status_code=400, message='No input data provided')
+        return create_response(status_code=400, message='Не надано вхідних даних')
 
     try:
         validated_data = TaxFopSchema(**data)
     except ValidationError as e:
-        return create_response(status_code=400, message='Invalid input', details=e.errors())
+        return create_response(status_code=400, message='Неправильні вхідні дані', details=e.errors())
 
     income = validated_data.income
     rate = validated_data.tax_group
@@ -188,7 +189,7 @@ def calculate_tax_fop() -> tuple[Response, int]:
 
     return create_response(
         status_code=200,
-        message='FOP tax calculated successfully',
+        message='Податок для ФОП розраховано успішно',
         data=response_data
     )
 
@@ -209,12 +210,14 @@ def calculate_balance_forecast() -> tuple[Response, int]:
     """
     user_id = get_jwt_identity()
     data = request.get_json()
+    if not data:
+        return create_response(status_code=400, message='Не надано вхідних даних')
 
     try:
         validated_data = BalanceForecastSchema(**data)
         forecast_months = validated_data.forecast_months
     except ValidationError as e:
-        return create_response(400, 'Invalid input', details=e.errors())
+        return create_response(400, 'Неправильні вхідні дані', details=e.errors())
 
     income_subquery = db.session.query(
         func.sum(Transaction.amount).label('total')
@@ -246,7 +249,7 @@ def calculate_balance_forecast() -> tuple[Response, int]:
     monthly_surplus = avg_monthly_income - avg_monthly_expense
     forecasted_balance = current_balance + (monthly_surplus * forecast_months)
 
-    return create_response(200, "Balance forecast calculated successfully", {
+    return create_response(200, "Прогноз балансу успішно розраховано", {
         'current_balance': round(current_balance, 2),
         'avg_monthly_income': round(avg_monthly_income, 2),
         'avg_monthly_expense': round(avg_monthly_expense, 2),

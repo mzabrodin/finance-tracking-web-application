@@ -51,7 +51,7 @@ def register() -> tuple[Response, int] | Response:
     if not data:
         return create_response(
             status_code=400,
-            message='No input data provided'
+            message='Не надано даних для реєстрації'
         )
 
     try:
@@ -59,13 +59,13 @@ def register() -> tuple[Response, int] | Response:
     except ValidationError as e:
         return create_response(
             status_code=400,
-            message='Invalid input',
+            message='Неправильний формат даних',
             details=e.errors()
         )
     except Exception as e:
         return create_response(
             status_code=500,
-            message='Internal server error',
+            message='Помилка сервера',
             details=str(e)
         )
 
@@ -75,12 +75,12 @@ def register() -> tuple[Response, int] | Response:
         if existing_user.email == validated_data.email:
             return create_response(
                 status_code=400,
-                message='User with this email already exists'
+                message='Користувач з цією електронною поштою вже існує'
             )
         if existing_user.username == validated_data.username:
             return create_response(
                 status_code=400,
-                message='User with this username already exists'
+                message='Користувач з цим іменем користувача вже існує'
             )
 
     try:
@@ -96,14 +96,14 @@ def register() -> tuple[Response, int] | Response:
         db.session.rollback()
         return create_response(
             status_code=500,
-            message='Database error',
+            message='Помилка бази даних',
             details=str(e)
         )
 
     access_token = create_access_token(identity=str(user.id))
     response = make_response(create_response(
         status_code=201,
-        message='User registered successfully, logged in',
+        message='Користувач успішно зареєстрований',
         data=user.to_dict()
     ))
     set_access_cookies(response, access_token)
@@ -127,7 +127,7 @@ def login() -> tuple[Response, int] | Response:
     if not data:
         return create_response(
             status_code=400,
-            message='No input data provided'
+            message='Не надано даних для входу'
         )
 
     try:
@@ -135,13 +135,13 @@ def login() -> tuple[Response, int] | Response:
     except ValidationError as e:
         return create_response(
             status_code=400,
-            message='Invalid input',
+            message='Неправильний формат даних',
             details=e.errors()
         )
     except Exception as e:
         return create_response(
             status_code=500,
-            message='Internal server error',
+            message='Помилка сервера',
             details=str(e)
         )
 
@@ -149,13 +149,13 @@ def login() -> tuple[Response, int] | Response:
     if not user or not user.check_password(validated_data.password):
         return create_response(
             status_code=401,
-            message='Invalid email or password'
+            message='Неправильний email або пароль'
         )
 
     access_token = create_access_token(identity=str(user.id))
     response = make_response(create_response(
         status_code=200,
-        message='Login successful',
+        message='Успішний вхід',
         data=user.to_dict()
     ))
     set_access_cookies(response, access_token)
@@ -175,7 +175,7 @@ def logout():
     """
     response = make_response(create_response(
         status_code=200,
-        message='Logout successful')
+        message='Успішний вихід')
     )
     unset_jwt_cookies(response)
     return response
@@ -201,7 +201,7 @@ def change_password() -> tuple[Response, int] | Response:
     if not data:
         return create_response(
             status_code=400,
-            message='No input data provided'
+            message='Не надано даних для зміни пароля'
         )
 
     try:
@@ -209,19 +209,19 @@ def change_password() -> tuple[Response, int] | Response:
     except ValidationError as e:
         return create_response(
             status_code=400,
-            message='Invalid input',
+            message='Неправильний формат даних',
             details=e.errors())
     except Exception as e:
         return create_response(
             status_code=500,
-            message='Internal server error',
+            message='Помилка сервера',
             details=str(e)
         )
 
     if user.check_password(validated_data.new_password):
         return create_response(
             status_code=400,
-            message='New password cannot be the same as the old password'
+            message='Нова пароль не може бути такою ж, як і старий'
         )
 
     try:
@@ -231,13 +231,13 @@ def change_password() -> tuple[Response, int] | Response:
         db.session.rollback()
         return create_response(
             status_code=500,
-            message='Database error',
+            message='Помилка бази даних',
             details=str(e)
         )
 
     response = make_response(create_response(
         status_code=200,
-        message='Password changed successfully, please log in again'
+        message='Пароль успішно змінено, будь ласка, увійдіть знову'
     ))
     unset_jwt_cookies(response)
     return response

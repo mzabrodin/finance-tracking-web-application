@@ -34,19 +34,19 @@ def get_budgets() -> tuple[Response, int] | Response:
     except SQLAlchemyError as e:
         return create_response(
             status_code=500,
-            message='Database error',
+            message='Помилка бази даних',
             details=str(e)
         )
 
     if not budget_list:
         return create_response(
             status_code=404,
-            message='No budgets found for the user'
+            message='Не знайдено жодного бюджету'
         )
 
     return make_response(create_response(
         status_code=200,
-        message='Budgets retrieved successfully',
+        message='Бюджети отримані успішно',
         data=budget_list
     ))
 
@@ -68,7 +68,7 @@ def get_budget(budget_id: int) -> tuple[Response, int] | Response:
     if not budget_id:
         return create_response(
             status_code=400,
-            message='Budget ID is required'
+            message="ID бюджету є обов'язковим"
         )
 
     try:
@@ -76,19 +76,19 @@ def get_budget(budget_id: int) -> tuple[Response, int] | Response:
     except SQLAlchemyError as e:
         return create_response(
             status_code=500,
-            message='Database error',
+            message='Помилка бази даних',
             details=str(e)
         )
 
     if not budget:
         return create_response(
             status_code=404,
-            message='Budget not found'
+            message='Не знайдено бюджет з таким ID'
         )
 
     return make_response(create_response(
         status_code=200,
-        message='Budget retrieved successfully',
+        message='Бюджет отримано успішно',
         data=budget.to_dict()
     ))
 
@@ -122,7 +122,7 @@ def create_budget() -> tuple[Response, int] | Response:
     if not data:
         return create_response(
             status_code=400,
-            message='No input data provided'
+            message='Не надано даних для створення бюджету'
         )
 
     try:
@@ -130,13 +130,13 @@ def create_budget() -> tuple[Response, int] | Response:
     except ValidationError as e:
         return create_response(
             status_code=400,
-            message='Invalid input',
+            message='Неправильний формат вхідних даних',
             details=str(e.errors())
         )
     except Exception as e:
         return create_response(
             status_code=500,
-            message='Internal server error',
+            message='Помілка сервера',
             details=str(e)
         )
 
@@ -156,13 +156,13 @@ def create_budget() -> tuple[Response, int] | Response:
         db.session.rollback()
         return create_response(
             status_code=500,
-            message='Database error',
+            message='Помилка бази даних',
             details=str(e)
         )
 
     return make_response(create_response(
         status_code=201,
-        message='Budget created successfully',
+        message='Бюджет створено успішно',
         data=budget.to_dict()
     ))
 
@@ -198,21 +198,21 @@ def update_budget(budget_id: int) -> tuple[Response, int] | Response:
     if not budget_id:
         return create_response(
             status_code=400,
-            message='Budget ID is required'
+            message="ID бюджету є обов'язковим"
         )
 
     budget = Budget.query.filter_by(id=budget_id, user_id=user_id).first()
     if not budget:
         return create_response(
             status_code=404,
-            message='Budget not found'
+            message='Бюджет не знайдено'
         )
 
     data = request.get_json()
     if not data:
         return create_response(
             status_code=400,
-            message='No input data provided'
+            message='Не надано даних для оновлення бюджету'
         )
 
     try:
@@ -220,13 +220,13 @@ def update_budget(budget_id: int) -> tuple[Response, int] | Response:
     except ValidationError as e:
         return create_response(
             status_code=400,
-            message='Invalid input',
+            message='Неправильний формат вхідних даних',
             details=str(e.errors())
         )
     except Exception as e:
         return create_response(
             status_code=500,
-            message='Internal server error',
+            message='Помилка сервера',
             details=str(e)
         )
 
@@ -240,13 +240,13 @@ def update_budget(budget_id: int) -> tuple[Response, int] | Response:
         db.session.rollback()
         return create_response(
             status_code=500,
-            message='Database error',
+            message='Помилка бази даних',
             details=str(e)
         )
 
     return make_response(create_response(
         status_code=200,
-        message='Budget updated successfully',
+        message='Бюджет оновлено успішно',
         data=budget.to_dict()
     ))
 
@@ -268,7 +268,7 @@ def delete_budget(budget_id: int) -> tuple[Response, int] | Response:
     if not budget_id:
         return create_response(
             status_code=400,
-            message='Budget ID is required'
+            message="ID бюджету є обов'язковим"
         )
 
     try:
@@ -276,14 +276,14 @@ def delete_budget(budget_id: int) -> tuple[Response, int] | Response:
     except SQLAlchemyError as e:
         return create_response(
             status_code=500,
-            message='Database error',
+            message='Помилка бази даних',
             details=str(e)
         )
 
     if not budget:
         return create_response(
             status_code=404,
-            message='Budget not found'
+            message='Бюджет не знайдено'
         )
 
     try:
@@ -293,13 +293,13 @@ def delete_budget(budget_id: int) -> tuple[Response, int] | Response:
         db.session.rollback()
         return create_response(
             status_code=500,
-            message='Database error',
+            message='Помилка бази даних',
             details=str(e)
         )
 
     return make_response(create_response(
         status_code=200,
-        message='Budget deleted successfully'
+        message='Бюджет видалено успішно'
     ))
 
 
@@ -320,13 +320,13 @@ def get_budget_balance() -> tuple[Response, int] | Response:
     except SQLAlchemyError as e:
         return create_response(
             status_code=500,
-            message='Database error',
+            message='Помилка бази даних',
             details=str(e)
         )
 
     return make_response(create_response(
         status_code=200,
-        message='Total budget balance retrieved successfully',
+        message='Загальний баланс отримано успішно',
         data={'total_balance': total_balance}
     ))
 
@@ -348,7 +348,7 @@ def get_budget_plan(budget_id: int) -> tuple[Response, int] | Response:
     if not budget_id:
         return create_response(
             status_code=400,
-            message='Budget ID is required'
+            message="ID бюджету є обов'язковим"
         )
 
     try:
@@ -356,20 +356,20 @@ def get_budget_plan(budget_id: int) -> tuple[Response, int] | Response:
     except SQLAlchemyError as e:
         return create_response(
             status_code=500,
-            message='Database error',
+            message='Помилка бази даних',
             details=str(e)
         )
 
     if not budget:
         return create_response(
             status_code=404,
-            message='Budget not found'
+            message='Бюджет не знайдено'
         )
 
     if budget.goal is None or budget.end_at is None:
         return create_response(
             status_code=400,
-            message='Budget goal or end date not set'
+            message='Ціль або дата закінчення бюджету не вказані'
         )
 
     today = datetime.date.today()
@@ -380,26 +380,26 @@ def get_budget_plan(budget_id: int) -> tuple[Response, int] | Response:
     if today > end_at:
         return create_response(
             status_code=400,
-            message='Budget end date has passed'
+            message='Дата закінчення бюджету вже минула'
         )
 
     days_remaining = (end_at - today).days
     if days_remaining <= 0:
         return create_response(
             status_code=400,
-            message='No days remaining in the budget period'
+            message='Не залишилося днів до закінчення бюджету'
         )
 
     daily_plan = (goal - current) / days_remaining
     if daily_plan < 0:
         return create_response(
             status_code=400,
-            message='Current budget exceeds the goal'
+            message='Бюджет вже перевищено, неможливо створити план'
         )
 
     return make_response(create_response(
         status_code=200,
-        message='Budget plan retrieved successfully',
+        message='План бюджету отримано успішно',
         data={
             'daily_plan': daily_plan,
             'days_remaining': days_remaining,
