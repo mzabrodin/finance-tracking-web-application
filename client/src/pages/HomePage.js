@@ -132,6 +132,8 @@ const HomePage = () => {
     }
   };
 
+  const expenseRatio = totalIncome > 0 ? (totalExpenses / totalIncome) * 100 : 0;
+
   if (loading || !user) {
     return (
       <div className="app-layout">
@@ -165,6 +167,7 @@ const HomePage = () => {
               <div className="card-content">
                 <div className="card-label">Загальний баланс</div>
                 <div className="card-value">{formatAmount(totalBalance)}</div>
+
               </div>
             </div>
             <div className="dashboard-card income">
