@@ -544,7 +544,6 @@ const AnalyticsPage = () => {
       <Sidebar />
       <div className="content-container">
         <div className="analytics-container">
-          {/* Header */}
           <div className="page-header">
             <div>
               <h1>АНАЛІТИКА</h1>
@@ -581,8 +580,6 @@ const AnalyticsPage = () => {
               </button>
             </div>
           </div>
-
-          {/* Reports Panel */}
           {showReports && (
             <div className="reports-panel">
               <div className="reports-header">
@@ -667,7 +664,6 @@ const AnalyticsPage = () => {
             </div>
           )}
 
-          {/* Summary Cards */}
           <div className="analytics-summary">
             <div className="summary-card income">
               <div className="summary-icon">↗</div>
@@ -699,7 +695,6 @@ const AnalyticsPage = () => {
             </div>
           </div>
 
-          {/* Charts Grid */}
           <div className="charts-grid">
             <div className="chart-container large">
               <h3>Тренд доходів та витрат</h3>
@@ -777,7 +772,6 @@ const AnalyticsPage = () => {
             </div>
           </div>
 
-          {/* Detailed Statistics */}
           <div className="statistics-section">
             <h3>Детальна статистика</h3>
             <div className="statistics-grid">

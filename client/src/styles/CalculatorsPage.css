@@ -32,7 +32,6 @@
   margin: 0 auto;
 }
 
-/* Header */
 .page-header {
   display: flex;
   justify-content: space-between;
@@ -57,7 +56,6 @@
   max-width: 600px;
 }
 
-/* Info Toggle Button */
 .info-toggle-btn {
   background: #6c757d;
   color: #fff;
@@ -82,7 +80,6 @@
   font-size: 24px;
 }
 
-/* Calculator Tabs */
 .calculator-tabs {
   display: flex;
   justify-content: center;
@@ -128,7 +125,6 @@
   font-size: 18px;
 }
 
-/* Calculator Cards */
 .calculator-card {
   background: #fff;
   border-radius: 10px;
@@ -194,7 +190,6 @@
   margin: 0;
 }
 
-/* Form Styles */
 .calculator-form {
   display: grid;
   gap: 20px;
@@ -239,7 +234,6 @@
   font-style: italic;
 }
 
-/* Calculate Button */
 .calculate-btn {
   background: linear-gradient(135deg, #333 0%, #555 100%);
   color: #fff;
@@ -284,7 +278,6 @@
   box-shadow: none;
 }
 
-/* Results */
 .calculator-result {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   border: 2px solid #dee2e6;
@@ -362,7 +355,6 @@
   color: #dc3545;
 }
 
-/* Payment Schedule */
 .schedule-toggle {
   background: #6c757d;
   color: #fff;
@@ -427,7 +419,6 @@
   background: #f8f9fa;
 }
 
-/* Info Section */
 .calculator-info {
   background: #fff;
   border-radius: 10px;
@@ -504,7 +495,6 @@
   margin: 0;
 }
 
-/* Loading State */
 .loading-container {
   display: flex;
   justify-content: center;
@@ -530,7 +520,6 @@
   100% { transform: rotate(360deg); }
 }
 
-/* Responsive Design */
 @media (max-width: 1024px) {
   .content-container {
     margin-left: 60px;

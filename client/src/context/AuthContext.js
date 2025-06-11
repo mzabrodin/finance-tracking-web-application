@@ -29,11 +29,9 @@ const login = async (email, password) => {
 const register = async (username, email, password, userType = 'default') => {
   try {
     const response = await axios.post(`${API_URL}/api/auth/register`, { username, email, password, user_type: userType }, { withCredentials: true });
-    console.log('Register response:', response.data); // Дебаг
     setUser(response.data.data);
     return response.data;
   } catch (error) {
-    console.error('Register error:', error.response?.data || error);
     throw error.response?.data || error;
   }
 };

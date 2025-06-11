@@ -17,28 +17,24 @@ function AuthPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('isLogin:', isLogin);
     try {
       const data = { email, password };
       if (!isLogin) {
         data.username = username;
         data.user_type = 'default';
-        console.log('Sending register request:', { username, email, password, user_type: 'default' });
         const response = await register(username, email, password, 'default');
         if (response.status === 'success') {
           alert('Реєстрація успішна! Будь ласка, увійдіть.');
           navigate('/auth');
         }
       } else {
-        console.log('Sending login request:', { email, password });
         const response = await login(email, password);
         if (response.status === 'success') {
-          alert('Успішний вхід!');
+//          alert('Успішний вхід!');
           navigate('/profile');
         }
       }
     } catch (error) {
-      console.error('Помилка:', error.response?.data || error.message);
       alert(error.response?.data?.message || 'Помилка автентифікації');
     }
   };

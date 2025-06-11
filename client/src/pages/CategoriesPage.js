@@ -168,9 +168,9 @@ const CategoriesPage = () => {
   };
 
   const handleDeleteCategory = async (id) => {
-    if (!window.confirm('Ви впевнені, що хочете видалити цю категорію?')) {
-      return;
-    }
+//    if (!window.confirm('Ви впевнені, що хочете видалити цю категорію?')) {
+//      return;
+//    }
 
     try {
       await deleteCategory(id);

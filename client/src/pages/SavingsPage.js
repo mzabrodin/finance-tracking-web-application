@@ -160,8 +160,8 @@ const BudgetApp = () => {
   };
 
   const deleteBudget = async (id) => {
-    const confirmed = window.confirm('Ви впевнені, що хочете видалити цей бюджет?');
-    if (!confirmed) return;
+//    const confirmed = window.confirm('Ви впевнені, що хочете видалити цей бюджет?');
+//    if (!confirmed) return;
 
     setLoading(true);
     try {

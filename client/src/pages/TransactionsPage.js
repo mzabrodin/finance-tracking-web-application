@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Sidebar from '../components/Sidebar';
+import Notification from '../components/Notification';
 import '../styles/TransactionsPage.css';
 import { API_URL } from '../config';
 
@@ -16,11 +17,9 @@ const BudgetGoalWarningModal = ({ isOpen, excessAmount, onConfirm, onCancel }) =
 
   return (
     <div className="transaction-modal">
-      <div className="transaction-form warning-modal">
-        <h2>Попередження про перевищення цілі</h2>
-        <p>
-          Сума доходу перевищує ціль бюджету на {formatAmount(excessAmount)}.
-        </p>
+      <div className="transaction-form warning-modal-pop">
+        <h2>Попередження</h2>
+        <p>Перевищення бюджету на {formatAmount(excessAmount)}</p>
         <div className="form-actions">
           <button
             type="button"
@@ -29,6 +28,7 @@ const BudgetGoalWarningModal = ({ isOpen, excessAmount, onConfirm, onCancel }) =
           >
             Скасувати
           </button>
+
         </div>
       </div>
     </div>
@@ -42,7 +42,7 @@ const TransactionsPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('all'); // 'all', 'income', 'expense'
+  const [activeTab, setActiveTab] = useState('all');
   const [formData, setFormData] = useState({
     amount: '',
     description: '',
@@ -53,8 +53,16 @@ const TransactionsPage = () => {
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [warningData, setWarningData] = useState({ excessAmount: 0 });
   const [pendingTransaction, setPendingTransaction] = useState(null);
+  const [notification, setNotification] = useState(null);
 
-  // Fetch data functions
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+  };
+
+  const closeNotification = () => {
+    setNotification(null);
+  };
+
   const fetchTransactions = async () => {
     try {
       const response = await axios.get(`${API_URL}/api/transactions/`, { withCredentials: true });
@@ -131,7 +139,7 @@ const TransactionsPage = () => {
     e.preventDefault();
 
     if (!formData.amount || !formData.category_id || (!editingTransaction && !formData.budget_id)) {
-      alert('Будь ласка, заповніть всі обов\'язкові поля');
+      showNotification('Заповніть усі обов\'язкові поля', 'error');
       return;
     }
 
@@ -143,7 +151,6 @@ const TransactionsPage = () => {
       budget_id: editingTransaction ? editingTransaction.budget_id : parseInt(formData.budget_id)
     };
 
-    // Check budget goal if transaction is income
     if (formData.type === 'income') {
       const goalCheck = checkBudgetGoal(
         transactionData.budget_id,
@@ -173,8 +180,7 @@ const TransactionsPage = () => {
           { withCredentials: true }
         );
         if (response.data.status === 'success') {
-          alert('Транзакція оновлена успішно!');
-          // Update transactions state with the updated transaction
+          showNotification('Транзакція оновлена успішно!');
           setTransactions(prev =>
             prev.map(t =>
               t.id === editingTransaction.id
@@ -190,7 +196,7 @@ const TransactionsPage = () => {
           { withCredentials: true }
         );
         if (response.data.status === 'success') {
-          alert('Транзакція створена успішно!');
+          showNotification('Транзакція створена успішно!');
         }
       }
 
@@ -205,11 +211,10 @@ const TransactionsPage = () => {
       setEditingTransaction(null);
       setShowWarningModal(false);
       setPendingTransaction(null);
-      // Fetch transactions to ensure data consistency
       await fetchTransactions();
     } catch (error) {
       console.error('Error saving transaction:', error);
-      alert(error.response?.data?.message || 'Помилка при збереженні транзакції');
+      showNotification(error.response?.data?.message || 'Помилка при збереженні транзакції', 'error');
     }
   };
 
@@ -237,9 +242,9 @@ const TransactionsPage = () => {
   };
 
   const handleDelete = async (transactionId) => {
-    if (!window.confirm('Ви впевнені, що хочете видалити цю транзакцію?')) {
-      return;
-    }
+//    if (!window.confirm('Ви впевнені, що хочете вид Family алити цю транзакцію?')) {
+//      return;
+//    }
 
     try {
       const response = await axios.delete(
@@ -247,12 +252,12 @@ const TransactionsPage = () => {
         { withCredentials: true }
       );
       if (response.data.status === 'success') {
-        alert('Транзакція видалена успішно!');
+        showNotification('Транзакція видалена успішно!');
         fetchTransactions();
       }
     } catch (error) {
       console.error('Error deleting transaction:', error);
-      alert(error.response?.data?.message || 'Помилка при видаленні транзакції');
+      showNotification(error.response?.data?.message || 'Помилка при видаленні транзакції', 'error');
     }
   };
 
@@ -283,7 +288,6 @@ const TransactionsPage = () => {
     }).format(amount);
   };
 
-  // Calculate totals
   const totalIncome = transactions
     .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + t.amount, 0);
@@ -296,13 +300,11 @@ const TransactionsPage = () => {
 
   const expenseRatio = totalIncome > 0 ? (totalExpenses / totalIncome) * 100 : 0;
 
-  // Filter transactions based on active tab
   const filteredTransactions = transactions.filter(transaction => {
     if (activeTab === 'all') return true;
     return transaction.type === activeTab;
   });
 
-  // Filter categories based on transaction type
   const filteredCategories = categories.filter(category =>
     formData.type === 'income' ? category.type === 'incomes' : category.type === 'expenses'
   );
@@ -319,7 +321,6 @@ const TransactionsPage = () => {
     });
   };
 
-  // Validate category_id during editing
   useEffect(() => {
     if (editingTransaction && formData.category_id) {
       const selectedCategory = categories.find(cat => cat.id === parseInt(formData.category_id));
@@ -347,7 +348,6 @@ const TransactionsPage = () => {
       <Sidebar />
       <div className="content-container">
         <div className="transactions-container">
-          {/* Header */}
           <div className="page-header">
             <div>
               <h1>ТРАНЗАКЦІЇ</h1>
@@ -372,10 +372,8 @@ const TransactionsPage = () => {
           </div>
 
           <div className="transactions-layout">
-            {/* Main Content */}
             <div className="transactions-main">
               <div className="transactions-section">
-                {/* Tabs */}
                 <div className="transactions-tabs">
                   <button
                     className={`transactions-tab ${activeTab === 'all' ? 'active' : ''}`}
@@ -397,7 +395,6 @@ const TransactionsPage = () => {
                   </button>
                 </div>
 
-                {/* Transactions Table */}
                 <div className="transactions-table">
                   {filteredTransactions.length === 0 ? (
                     <div className="empty-state">
@@ -479,9 +476,7 @@ const TransactionsPage = () => {
               </div>
             </div>
 
-            {/* Sidebar */}
             <div className="transactions-sidebar">
-              {/* Account Balance */}
               <div className="account-balance">
                 <div className="balance-header">
                   <div className="balance-title">
@@ -530,7 +525,6 @@ const TransactionsPage = () => {
           </div>
         </div>
 
-        {/* Transaction Form Modal */}
         {showForm && (
           <div className="transaction-modal">
             <div className="transaction-form">
@@ -635,6 +629,14 @@ const TransactionsPage = () => {
           onConfirm={handleWarningConfirm}
           onCancel={handleWarningCancel}
         />
+
+        {notification && (
+          <Notification
+            message={notification.message}
+            type={notification.type}
+            onClose={closeNotification}
+          />
+        )}
       </div>
     </div>
   );

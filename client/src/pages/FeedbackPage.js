@@ -254,7 +254,7 @@ const FeedbackPage = () => {
   };
 
   const handleReset = () => {
-    if (window.confirm('Бажаєте очистити форму?')) {
+
       setFormData({
         name: user?.username || '',
         email: user?.email || '',
@@ -266,7 +266,7 @@ const FeedbackPage = () => {
       setHoveredRating(0);
       setIsSubmitted(false);
       formRef.current?.focus();
-    }
+
   };
 
   const getRatingText = (rating) => {
