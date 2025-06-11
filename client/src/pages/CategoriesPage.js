@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback  } from 'react';
 import Sidebar from '../components/Sidebar';
 import '../styles/CategoriesPage.css';
 
@@ -36,7 +36,7 @@ const CategoriesPage = () => {
     }
   };
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       setLoading(true);
       const response = await apiCall(`${API_BASE}/categories/`);
@@ -48,7 +48,7 @@ const CategoriesPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const createCategory = async (categoryData) => {
     const response = await apiCall(`${API_BASE}/categories/`, {
@@ -74,7 +74,7 @@ const CategoriesPage = () => {
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [fetchCategories]);
 
   useEffect(() => {
     if (filterType === 'all') {
