@@ -1,13 +1,26 @@
+/**
+ * This file contains authentication context and functions for user management.
+ */
+
 import React, { createContext, useState, useContext } from 'react';
 import axios from 'axios';
 import { API_URL } from '../config';
 
+/**
+ * AuthContext provides authentication state and functions for user management.
+ */
 const AuthContext = createContext();
 
+/**
+ * My AuthProvider component wraps the application and provides authentication context.
+ */
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
 
-const login = async (email, password) => {
+  /**
+   * Logs in a user with email and password.
+   */
+  const login = async (email, password) => {
   try {
     const response = await axios.post(`${API_URL}/api/auth/login`, { email, password }, { withCredentials: true });
     setUser(response.data.data);
@@ -17,6 +30,9 @@ const login = async (email, password) => {
   }
 };
 
+  /**
+   * Logs out the current user.
+   */
   const logout = async () => {
     try {
       await axios.post(`${API_URL}/api/auth/logout`, {}, { withCredentials: true });
@@ -26,7 +42,10 @@ const login = async (email, password) => {
     }
   };
 
-const register = async (username, email, password, userType = 'default') => {
+  /**
+   * Crates a new user account.
+   */
+  const register = async (username, email, password, userType = 'default') => {
   try {
     const response = await axios.post(`${API_URL}/api/auth/register`, { username, email, password, user_type: userType }, { withCredentials: true });
     setUser(response.data.data);
@@ -36,6 +55,9 @@ const register = async (username, email, password, userType = 'default') => {
   }
 };
 
+  /**
+   * Changes the password for the current user.
+   */
   const changePassword = async (newPassword) => {
     try {
       const response = await axios.post(`${API_URL}/api/auth/change_password`, { new_password: newPassword }, { withCredentials: true });

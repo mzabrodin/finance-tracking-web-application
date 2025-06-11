@@ -1,6 +1,13 @@
+/**
+ * This file contains category form component.
+ */
+
 import React from 'react';
 import '../styles/CategoriesPage.css';
 
+/**
+ * CategoryForm component allows users to add or edit categories.
+ */
 const CategoryForm = ({
   editingCategory,
   newCategory,
