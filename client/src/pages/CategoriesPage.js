@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback  } from 'react';
 import Sidebar from '../components/Sidebar';
 import '../styles/CategoriesPage.css';
+import { API_URL } from '../config';
 
 const CategoriesPage = () => {
   const [categories, setCategories] = useState([]);
@@ -12,7 +13,6 @@ const CategoriesPage = () => {
   const [newCategory, setNewCategory] = useState({ name: '', description: '', type: '' });
   const [formErrors, setFormErrors] = useState({});
 
-  const API_BASE = 'http://localhost:5000/api';
   const apiCall = async (url, options = {}) => {
     try {
       const response = await fetch(url, {
@@ -39,7 +39,7 @@ const CategoriesPage = () => {
   const fetchCategories = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await apiCall(`${API_BASE}/categories/`);
+      const response = await apiCall(`${API_URL}/api/categories/`);
       setCategories(response.data || []);
       setFilteredCategories(response.data || []);
       setError('');
@@ -51,7 +51,7 @@ const CategoriesPage = () => {
   }, []);
 
   const createCategory = async (categoryData) => {
-    const response = await apiCall(`${API_BASE}/categories/`, {
+    const response = await apiCall(`${API_URL}/api/categories/`, {
       method: 'POST',
       body: JSON.stringify(categoryData),
     });
@@ -59,7 +59,7 @@ const CategoriesPage = () => {
   };
 
   const updateCategory = async (id, categoryData) => {
-    const response = await apiCall(`${API_BASE}/categories/${id}`, {
+    const response = await apiCall(`${API_URL}/api/categories/${id}`, {
       method: 'PUT',
       body: JSON.stringify(categoryData),
     });
@@ -67,7 +67,7 @@ const CategoriesPage = () => {
   };
 
   const deleteCategory = async (id) => {
-    await apiCall(`${API_BASE}/categories/${id}`, {
+    await apiCall(`${API_URL}/api/categories/${id}`, {
       method: 'DELETE',
     });
   };
