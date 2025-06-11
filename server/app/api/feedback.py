@@ -1,7 +1,5 @@
 
-"""API endpoint for feedback functionality."""
-
-from flask import Blueprint, request
+from flask import Blueprint, request, current_app
 from flask_mail import Mail, Message
 from pydantic import BaseModel, ValidationError, EmailStr, validator
 from datetime import datetime
@@ -44,7 +42,7 @@ def create_admin_html_template(feedback_data):
         'performance': 'Продуктивність'
     }
     rating_stars = '★' * feedback_data['rating'] + '☆' * (5 - feedback_data['rating'])
-    
+
     return f"""
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h2 style="color: #333;">🎯 Новий відгук від користувача</h2>
@@ -153,13 +151,23 @@ def create_user_text_template(feedback_data):
 
 def send_feedback_emails(feedback_data):
     """Відправляє email адміністратору та користувачу"""
-    print(f"Спроба відправити email для {feedback_data['email']}")
+    sender_email = current_app.config.get('MAIL_DEFAULT_SENDER')
+    if not sender_email:
+        print("Помилка: MAIL_DEFAULT_SENDER не налаштовано в конфігурації")
+        return False
+
+    recipient_email = os.getenv('FEEDBACK_RECIPIENT_EMAIL')
+    if not recipient_email:
+        print("Помилка: FEEDBACK_RECIPIENT_EMAIL не налаштовано в змінних середовища")
+        return False
+
+    print(f"Спроба відправити email для {feedback_data['email']} з відправником {sender_email}")
     try:
         # Лист для адміна
         msg_admin = Message(
             subject=f"Новий відгук від {feedback_data['name']}",
-            sender=os.getenv('SENDER_EMAIL'),
-            recipients=[os.getenv('FEEDBACK_RECIPIENT_EMAIL')],
+            sender=sender_email,
+            recipients=[recipient_email],
             body=create_admin_text_template(feedback_data),
             html=create_admin_html_template(feedback_data)
         )
@@ -169,7 +177,7 @@ def send_feedback_emails(feedback_data):
         # Лист для користувача
         msg_user = Message(
             subject="Дякуємо за ваш відгук!",
-            sender=os.getenv('SENDER_EMAIL'),
+            sender=sender_email,
             recipients=[feedback_data['email']],
             body=create_user_text_template(feedback_data),
             html=create_user_confirmation_template(feedback_data)
@@ -184,9 +192,7 @@ def send_feedback_emails(feedback_data):
 
 @feedback.route('/feedback', methods=['POST'])
 def submit_feedback():
-    """
-    Endpoint для отримання відгуків від користувачів
-    """
+    """Endpoint для отримання відгуків від користувачів"""
     try:
         # Отримуємо дані з запиту
         data = request.get_json()
@@ -236,9 +242,7 @@ def submit_feedback():
 @feedback.route('/feedback/stats', methods=['GET'])
 @logged_in_required
 def get_feedback_stats():
-    """
-    Отримання статистики відгуків (тільки для авторизованих користувачів)
-    """
+    """Отримання статистики відгуків (тільки для авторизованих користувачів)"""
     return create_response(
         status_code=200,
         message='Статистика відгуків',
