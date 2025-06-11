@@ -9,8 +9,7 @@ import SavingsPage from './pages/SavingsPage';
 import CalculatorsPage from './pages/CalculatorsPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import HomePage from './pages/HomePage';
-
-
+import FeedbackPage from './pages/FeedbackPage';
 
 
 function ProtectedRoute({ children }) {
@@ -86,7 +85,7 @@ function App() {
             path="/budgets"
             element={
               <ProtectedRoute>
-                <div>Сторінка бюджетів (в розробці)</div>
+               <FeedbackPage />
               </ProtectedRoute>
             }
           />
