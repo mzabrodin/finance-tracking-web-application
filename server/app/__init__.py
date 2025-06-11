@@ -1,4 +1,3 @@
-
 """Flask application factory for the app package.
 
 This module contains the application factory function `create_app`.
@@ -15,9 +14,7 @@ Modules:
 
 from flask import Flask
 from flask_cors import CORS
-from flask_mail import Mail
 
-mail = Mail()  # Створюємо глобальний об'єкт Mail
 
 def create_app() -> Flask:
     """Creates and configures the Flask application.
@@ -35,7 +32,7 @@ def create_app() -> Flask:
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    from app.utils.extensions import db, jwt, bcrypt
+    from app.utils.extensions import db, jwt, bcrypt, mail
 
     db.init_app(app)
     jwt.init_app(app)
