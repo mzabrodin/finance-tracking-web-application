@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import Notification from '../components/Notification';
 import '../styles/TransactionsPage.css';
 import { API_URL } from '../config';
 
-const BudgetGoalWarningModal = ({ isOpen, warningType, amount, onConfirm, onCancel }) => {
+const BudgetGoalWarningModal = ({ isOpen, excessAmount, onConfirm, onCancel }) => {
   if (!isOpen) return null;
 
   const formatAmount = (amount) => {
@@ -20,11 +19,7 @@ const BudgetGoalWarningModal = ({ isOpen, warningType, amount, onConfirm, onCanc
     <div className="transaction-modal">
       <div className="transaction-form warning-modal-pop">
         <h2>Попередження</h2>
-        <p>
-          {warningType === 'insufficient_funds'
-            ? `Недостатньо коштів: не вистачає ${formatAmount(amount)}`
-            : `Перевищення бюджету на ${formatAmount(amount)}`}
-        </p>
+        <p>Перевищення бюджету на {formatAmount(excessAmount)}</p>
         <div className="form-actions">
           <button
             type="button"
@@ -33,15 +28,7 @@ const BudgetGoalWarningModal = ({ isOpen, warningType, amount, onConfirm, onCanc
           >
             Скасувати
           </button>
-          {warningType !== 'insufficient_funds' && (
-            <button
-              type="button"
-              className="form-btn primary"
-              onClick={onConfirm}
-            >
-              Продовжити
-            </button>
-          )}
+
         </div>
       </div>
     </div>
@@ -64,10 +51,9 @@ const TransactionsPage = () => {
     budget_id: ''
   });
   const [showWarningModal, setShowWarningModal] = useState(false);
-  const [warningData, setWarningData] = useState({ warningType: '', amount: 0 });
+  const [warningData, setWarningData] = useState({ excessAmount: 0 });
   const [pendingTransaction, setPendingTransaction] = useState(null);
   const [notification, setNotification] = useState(null);
-  const navigate = useNavigate();
 
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
@@ -128,47 +114,22 @@ const TransactionsPage = () => {
     fetchData();
   }, []);
 
-  const checkBudgetGoalAndBalance = (budgetId, newAmount, transactionType, isEditing = false, originalAmount = 0) => {
-    const amount = parseFloat(newAmount);
-    // Check balance for expenses
-    if (transactionType === 'expense') {
-      const totalIncome = transactions
-        .filter(t => t.type === 'income')
-        .reduce((sum, t) => sum + t.amount, 0);
-      const totalExpenses = transactions
-        .filter(t => t.type === 'expense')
-        .reduce((sum, t) => sum + t.amount, 0);
-      const currentBalance = totalIncome - totalExpenses;
-      const adjustedBalance = isEditing
-        ? currentBalance + originalAmount - amount
-        : currentBalance - amount;
-
-      if (adjustedBalance < 0) {
-        return {
-          isExceeded: true,
-          warningType: 'insufficient_funds',
-          amount: Math.abs(adjustedBalance)
-        };
-      }
-    }
-
-    // Check budget goal for incomes
+  const checkBudgetGoal = (budgetId, newAmount, isEditing = false, originalAmount = 0) => {
     const budget = budgets.find(b => b.id === parseInt(budgetId));
-    if (!budget || !budget.goal || transactionType !== 'income') return { isExceeded: false };
+    if (!budget || !budget.goal) return { isExceeded: false };
 
     const budgetIncome = transactions
       .filter(t => t.budget_id === parseInt(budgetId) && t.type === 'income')
       .reduce((sum, t) => sum + t.amount, 0);
 
     const adjustedIncome = isEditing
-      ? budgetIncome - originalAmount + amount
-      : budgetIncome + amount;
+      ? budgetIncome - originalAmount + parseFloat(newAmount)
+      : budgetIncome + parseFloat(newAmount);
 
     if (adjustedIncome > budget.goal) {
       return {
         isExceeded: true,
-        warningType: 'budget_exceeded',
-        amount: adjustedIncome - budget.goal
+        excessAmount: adjustedIncome - budget.goal
       };
     }
     return { isExceeded: false };
@@ -190,19 +151,20 @@ const TransactionsPage = () => {
       budget_id: editingTransaction ? editingTransaction.budget_id : parseInt(formData.budget_id)
     };
 
-    const checkResult = checkBudgetGoalAndBalance(
-      transactionData.budget_id,
-      formData.amount,
-      formData.type,
-      !!editingTransaction,
-      editingTransaction?.amount || 0
-    );
+    if (formData.type === 'income') {
+      const goalCheck = checkBudgetGoal(
+        transactionData.budget_id,
+        formData.amount,
+        !!editingTransaction,
+        editingTransaction?.amount || 0
+      );
 
-    if (checkResult.isExceeded) {
-      setWarningData({ warningType: checkResult.warningType, amount: checkResult.amount });
-      setPendingTransaction(transactionData);
-      setShowWarningModal(true);
-      return;
+      if (goalCheck.isExceeded) {
+        setWarningData({ excessAmount: goalCheck.excessAmount });
+        setPendingTransaction(transactionData);
+        setShowWarningModal(true);
+        return;
+      }
     }
 
     await submitTransaction(transactionData);
@@ -257,7 +219,7 @@ const TransactionsPage = () => {
   };
 
   const handleWarningConfirm = () => {
-    if (pendingTransaction && warningData.warningType === 'budget_exceeded') {
+    if (pendingTransaction) {
       submitTransaction(pendingTransaction);
     }
   };
@@ -280,6 +242,10 @@ const TransactionsPage = () => {
   };
 
   const handleDelete = async (transactionId) => {
+//    if (!window.confirm('Ви впевнені, що хочете вид Family алити цю транзакцію?')) {
+//      return;
+//    }
+
     try {
       const response = await axios.delete(
         `${API_URL}/api/transactions/${transactionId}`,
@@ -504,10 +470,7 @@ const TransactionsPage = () => {
                   )}
                 </div>
 
-                <button
-                  className="details-btn"
-                  onClick={() => navigate('/analytics')}
-                >
+                <button className="details-btn">
                   ДЕТАЛЬНІШЕ
                 </button>
               </div>
@@ -662,8 +625,7 @@ const TransactionsPage = () => {
 
         <BudgetGoalWarningModal
           isOpen={showWarningModal}
-          warningType={warningData.warningType}
-          amount={warningData.amount}
+          excessAmount={warningData.excessAmount}
           onConfirm={handleWarningConfirm}
           onCancel={handleWarningCancel}
         />

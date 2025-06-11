@@ -1,21 +1,22 @@
+"""API for handling user feedback in a Flask application."""
+
+import os
+from datetime import datetime
 
 from flask import Blueprint, request, current_app
-from flask_mail import Mail, Message
+from flask_mail import Message
 from pydantic import BaseModel, ValidationError, EmailStr, validator
-from datetime import datetime
-import os
 
-from app.utils.responses import create_response
+from app.utils.extensions import mail
 from app.utils.decorators import logged_in_required
-from app.models.user_model import User
-from flask_jwt_extended import get_jwt_identity
-from app import mail  # Імпортуємо глобальний mail
+from app.utils.responses import create_response
 
-# Створюємо Blueprint
 feedback = Blueprint('feedback', __name__)
+"""Feedback Blueprint для обробки відгуків користувачів"""
 
-# Pydantic схема для валідації
+
 class FeedbackSchema(BaseModel):
+    """Pydantic model for validating feedback data."""
     name: str
     email: EmailStr
     rating: int
@@ -23,17 +24,20 @@ class FeedbackSchema(BaseModel):
     category: str
 
     class Config:
+        """Pydantic configuration"""
         str_strip_whitespace = True
 
     @validator('rating')
     def validate_rating(cls, v):
+        """Validate that rating is between 1 and 5."""
         v = int(v) if isinstance(v, str) else v
         if not 1 <= v <= 5:
             raise ValueError('Rating має бути від 1 до 5')
         return v
 
+
 def create_admin_html_template(feedback_data):
-    """HTML шаблон для адміністратора"""
+    """Creates HTML template for admin notification."""
     category_names = {
         'general': 'Загальний відгук',
         'bug': 'Повідомлення про помилку',
@@ -65,8 +69,9 @@ def create_admin_html_template(feedback_data):
     </div>
     """
 
+
 def create_admin_text_template(feedback_data):
-    """Текстовий шаблон для адміністратора"""
+    """Text template for admin notification."""
     category_names = {
         'general': 'Загальний відгук',
         'bug': 'Повідомлення про помилку',
@@ -95,8 +100,9 @@ Email: {feedback_data['email']}
 Ви можете відповісти безпосередньо на цей email.
     """
 
+
 def create_user_confirmation_template(feedback_data):
-    """HTML шаблон підтвердження для користувача"""
+    """HTML template for user confirmation"""
     return f"""
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h2 style="color: #333;">✅ Дякуємо за ваш відгук!</h2>
@@ -123,8 +129,9 @@ def create_user_confirmation_template(feedback_data):
     </div>
     """
 
+
 def create_user_text_template(feedback_data):
-    """Текстовий шаблон для користувача"""
+    """Text template for user confirmation"""
     return f"""
 ✅ ДЯКУЄМО ЗА ВАШ ВІДГУК!
 
@@ -149,21 +156,18 @@ def create_user_text_template(feedback_data):
 Якщо у вас є питання, напишіть на: tttkhaimyk@gmail.com
     """
 
-def send_feedback_emails(feedback_data):
-    """Відправляє email адміністратору та користувачу"""
+
+def send_feedback_emails(feedback_data) -> bool:
+    """Sends emails to admin and user after feedback submission."""
     sender_email = current_app.config.get('MAIL_DEFAULT_SENDER')
     if not sender_email:
-        print("Помилка: MAIL_DEFAULT_SENDER не налаштовано в конфігурації")
         return False
 
     recipient_email = os.getenv('FEEDBACK_RECIPIENT_EMAIL')
     if not recipient_email:
-        print("Помилка: FEEDBACK_RECIPIENT_EMAIL не налаштовано в змінних середовища")
         return False
 
-    print(f"Спроба відправити email для {feedback_data['email']} з відправником {sender_email}")
     try:
-        # Лист для адміна
         msg_admin = Message(
             subject=f"Новий відгук від {feedback_data['name']}",
             sender=sender_email,
@@ -172,9 +176,7 @@ def send_feedback_emails(feedback_data):
             html=create_admin_html_template(feedback_data)
         )
         mail.send(msg_admin)
-        print("Email адміну відправлено")
 
-        # Лист для користувача
         msg_user = Message(
             subject="Дякуємо за ваш відгук!",
             sender=sender_email,
@@ -183,18 +185,16 @@ def send_feedback_emails(feedback_data):
             html=create_user_confirmation_template(feedback_data)
         )
         mail.send(msg_user)
-        print("Email користувачу відправлено")
 
         return True
-    except Exception as e:
-        print(f"Помилка відправки email: {str(e)}")
+    except ValidationError as e:
         return False
+
 
 @feedback.route('/feedback', methods=['POST'])
 def submit_feedback():
     """Endpoint для отримання відгуків від користувачів"""
     try:
-        # Отримуємо дані з запиту
         data = request.get_json()
         if not data:
             return create_response(
@@ -202,9 +202,6 @@ def submit_feedback():
                 message='Не надано даних'
             )
 
-        print(f"Отримано feedback: {data.get('name', 'Невідомо')} - {data.get('rating', 0)}/5")
-
-        # Валідуємо дані
         try:
             validated_data = FeedbackSchema(**data)
         except ValidationError as e:
@@ -218,7 +215,6 @@ def submit_feedback():
         feedback_data = validated_data.dict()
         feedback_data['submitted_at'] = datetime.now().isoformat()
 
-        # Відправляємо emails
         emails_sent = send_feedback_emails(feedback_data)
 
         return create_response(
@@ -239,10 +235,11 @@ def submit_feedback():
             details=str(e)
         )
 
+
 @feedback.route('/feedback/stats', methods=['GET'])
 @logged_in_required
 def get_feedback_stats():
-    """Отримання статистики відгуків (тільки для авторизованих користувачів)"""
+    """Retrieve feedback statistics."""
     return create_response(
         status_code=200,
         message='Статистика відгуків',

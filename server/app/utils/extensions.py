@@ -1,6 +1,7 @@
 """Extensions methods for Flask application."""
 from flask import Response
 from flask_jwt_extended import JWTManager
+from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 
@@ -12,6 +13,8 @@ jwt = JWTManager()
 """JWT Manager instance for handling JSON Web Tokens."""
 bcrypt = Bcrypt()
 """Bcrypt instance for hashing passwords."""
+mail = Mail()
+"""Mail instance for sending emails."""
 
 
 @jwt.unauthorized_loader
