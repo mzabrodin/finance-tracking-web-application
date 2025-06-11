@@ -40,7 +40,7 @@ def create_app() -> Flask:
 
     CORS(app, resources={
         r"/*": {
-            "origins": ["http://localhost:3000", "https://your-frontend-domain.com"],
+            "origins": app.config.get('FRONTEND_URL'),
             "supports_credentials": True
         }
     })

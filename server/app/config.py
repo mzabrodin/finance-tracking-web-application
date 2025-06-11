@@ -38,3 +38,5 @@ class Config:
     JWT_COOKIE_SAMESITE = os.getenv('JWT_COOKIE_SAMESITE')
 
     BCRYPT_LOG_ROUNDS = int(os.getenv('BCRYPT_LOG_ROUNDS', '12'))
+
+    FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
