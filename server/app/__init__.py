@@ -38,7 +38,12 @@ def create_app() -> Flask:
     jwt.init_app(app)
     bcrypt.init_app(app)
 
-    CORS(app, resources={r"/*": {"origins": "*"}})
+    CORS(app, resources={
+        r"/*": {
+            "origins": ["http://localhost:3000", "https://your-frontend-domain.com"],
+            "supports_credentials": True
+        }
+    })
 
     app.register_blueprint(api)
 
