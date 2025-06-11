@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import '../styles/CalculatorsPage.css';
 import Sidebar from '../components/Sidebar';
 import '../styles/Sidebar.css';
-
-const API_URL = 'http://localhost:5000';
+import { API_URL } from '../config';
 
 const SavingsCalculator = () => {
   const [formData, setFormData] = useState({
