@@ -10,6 +10,7 @@ from app.api.transactions_api import transactions
 from app.api.users_api import users
 from app.api.calculators_api import calculators
 from app.api.categories_api import categories
+from .feedback import feedback
 
 api = Blueprint('api', __name__, url_prefix='/api')
 """Main API blueprint for the application."""
@@ -20,3 +21,4 @@ api.register_blueprint(budgets, url_prefix='/budgets')
 api.register_blueprint(calculators, url_prefix='/calculators')
 api.register_blueprint(categories, url_prefix='/categories')
 api.register_blueprint(transactions, url_prefix='/transactions')
+api.register_blueprint(feedback)

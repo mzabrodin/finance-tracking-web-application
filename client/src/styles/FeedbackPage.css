@@ -1,0 +1,274 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&family=Cuprum:ital,wght@0,400..700;1,400..700&display=swap');
+@import url('https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css');
+
+.feedback-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.feedback-container .welcome-section {
+  margin-bottom: 40px;
+}
+
+.feedback-container .welcome-section h1 {
+  color: #333;
+  font-family: "Oswald", sans-serif;
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  margin-bottom: 10px;
+}
+
+.feedback-container .welcome-section p {
+  font-family: "Cuprum", sans-serif;
+  font-size: 16px;
+  color: #666;
+}
+
+.feedback-container .feedback-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px 1px rgba(61, 61, 61, 0.25);
+  padding: 20px;
+}
+
+.feedback-container .input-group {
+  margin-bottom: 20px;
+}
+
+.feedback-container .input-group label {
+  display: block;
+  margin-left: 35px;
+  font-size: 26px;
+  color: #000000;
+  font-family: "Oswald", sans-serif;
+  margin-bottom: 5px;
+}
+
+.feedback-container .input-group input,
+.feedback-container .input-group select {
+  padding: 20px;
+  font-size: 16px;
+  border: 1px solid #000;
+  border-radius: 16px;
+  background: #fff;
+  margin-left: 35px;
+  font-family: "Oswald", sans-serif;
+}
+
+.feedback-container .input-group textarea {
+  padding: 20px;
+  font-size: 16px;
+  border: 1px solid #000;
+  border-radius: 16px;
+  background: #fff;
+  margin-left: 35px;
+  font-family: "Oswald", sans-serif;
+  width: 90%;
+  height: 120px;
+  resize: none;
+}
+
+.feedback-container .input-group input.error,
+.feedback-container .input-group select.error,
+.feedback-container .input-group textarea.error {
+  border-color: #FF8042;
+}
+
+.feedback-container .input-group .error-text {
+  color: #FF8042;
+  font-family: "Cuprum", sans-serif;
+  font-size: 14px;
+  margin-left: 35px;
+  margin-top: 5px;
+}
+
+.feedback-container .error-message {
+  background: #f5f5f5;
+  border-left: 4px solid #FF8042;
+  padding: 15px;
+  margin-bottom: 20px;
+  font-family: "Cuprum", sans-serif;
+  font-size: 16px;
+  color: #333;
+}
+
+.feedback-container .rating-group {
+  display: flex;
+  gap: 10px;
+  margin-left: 35px;
+  margin-bottom: 10px;
+}
+
+.feedback-container .rating-group .star-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.feedback-container .rating-text {
+  font-family: "Cuprum", sans-serif;
+  font-size: 14px;
+  color: #666;
+  margin-left: 35px;
+}
+
+.feedback-container .char-count {
+  font-family: "Cuprum", sans-serif;
+  font-size: 14px;
+  color: #666;
+  margin-left: 35px;
+  margin-top: 5px;
+}
+
+.feedback-container .char-count.error-text {
+  color: #FF8042;
+}
+
+.feedback-container .action-btn {
+  margin-left: 35px;
+  padding: 10px 20px;
+  border: 1px solid #000;
+  border-radius: 12px;
+  width: 220px;
+  background-color: #333;
+  color: #fff;
+  cursor: pointer;
+  font-family: "Oswald", sans-serif;
+  font-size: 20px;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.feedback-container .action-btn:disabled {
+  background: #4a4a4a;
+  cursor: not-allowed;
+}
+
+.feedback-container .action-btn:hover:not(:disabled) {
+  background: #555;
+  transform: translateY(-2px);
+}
+
+.feedback-container .info-section {
+  margin-top: 40px;
+}
+
+.feedback-container .info-section h2 {
+  font-family: "Oswald", sans-serif;
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.feedback-container .info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.feedback-container .info-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px 1px rgba(61, 61, 61, 0.25);
+  padding: 20px;
+  text-align: center;
+}
+
+.feedback-container .info-card .icon {
+  font-size: 30px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.feedback-container .info-card h3 {
+  font-family: "Oswald", sans-serif;
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.feedback-container .info-card p {
+  font-family: "Cuprum", sans-serif;
+  font-size: 14px;
+  color: #666;
+}
+
+.feedback-container .button-group {
+  display: flex;
+  gap: 15px;
+  margin-left: 35px;
+  margin-top: 20px;
+}
+
+.feedback-container .reset-btn {
+  background-color: #666;
+  border-color: #555;
+}
+
+.feedback-container .reset-btn:hover:not(:disabled) {
+  background-color: #777;
+}
+
+.feedback-container .visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.feedback-container .field-row .input-row {
+  display: flex;
+  margin-top : 20px;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.feedback-container .field-row .input-row .input-group {
+  flex: 1;
+  min-width: 200px;
+}
+
+.feedback-container .field-row .input-row .input-group input,
+.feedback-container .field-row .input-row .input-group select {
+  width: 80%;
+}
+
+@media (max-width: 1024px) {
+  .feedback-container .welcome-section h1 {
+    font-size: 32px;
+  }
+
+  .feedback-container .info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .feedback-container .field-row .input-row {
+    flex-direction: column;
+  }
+
+  .feedback-container .input-group input,
+  .feedback-container .input-group select {
+    width: calc(100% - 70px);
+  }
+
+  .feedback-container .action-btn {
+    width: calc(100% - 70px);
+  }
+
+  .feedback-container .button-group {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
