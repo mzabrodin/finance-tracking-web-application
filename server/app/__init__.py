@@ -42,7 +42,12 @@ def create_app() -> Flask:
     bcrypt.init_app(app)
     mail.init_app(app)
 
-    CORS(app, resources={r"/*": {"origins": "*"}})
+    CORS(app, resources={
+        r"/*": {
+            "origins": app.config.get('FRONTEND_URL'),
+            "supports_credentials": True
+        }
+    })
 
     app.register_blueprint(api)
 
