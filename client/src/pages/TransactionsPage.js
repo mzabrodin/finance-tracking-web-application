@@ -1,7 +1,3 @@
-/**
- * This file contains the TransactionsPage component,
- */
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Sidebar from '../components/Sidebar';
@@ -10,9 +6,9 @@ import '../styles/TransactionsPage.css';
 import { API_URL } from '../config';
 
 /**
- * BudgetGoalWarningModal component to display a warning when budget goal is exceeded.
+ * WarningModal component to display budget goal or insufficient funds warnings.
  */
-const BudgetGoalWarningModal = ({ isOpen, excessAmount, onConfirm, onCancel }) => {
+const WarningModal = ({ isOpen, type, amount, onConfirm, onCancel }) => {
     if (!isOpen) return null;
 
     /**
@@ -25,11 +21,16 @@ const BudgetGoalWarningModal = ({ isOpen, excessAmount, onConfirm, onCancel }) =
         }).format(amount);
     };
 
+    const title = type === 'budget_exceeded' ? 'Попередження про перевищення бюджету' : 'Недостатньо коштів';
+    const message = type === 'budget_exceeded'
+        ? `Перевищення бюджету на ${formatAmount(amount)}`
+        : `Сума витрати (${formatAmount(amount)}) перевищує доступний баланс`;
+
     return (
         <div className="transaction-modal">
             <div className="transaction-form warning-modal-pop">
-                <h2>Попередження</h2>
-                <p>Перевищення бюджету на {formatAmount(excessAmount)}</p>
+                <h2>{title}</h2>
+                <p>{message}</p>
                 <div className="form-actions">
                     <button
                         type="button"
@@ -38,13 +39,15 @@ const BudgetGoalWarningModal = ({ isOpen, excessAmount, onConfirm, onCancel }) =
                     >
                         Скасувати
                     </button>
-                    <button
-                        type="button"
-                        className="form-btn primary"
-                        onClick={onConfirm}
-                    >
-                        Підтвердити
-                    </button>
+                    {type === 'budget_exceeded' && (
+                        <button
+                            type="button"
+                            className="form-btn primary"
+                            onClick={onConfirm}
+                        >
+                            Підтвердити
+                        </button>
+                    )}
                 </div>
             </div>
         </div>
@@ -70,10 +73,10 @@ const TransactionsPage = () => {
         budget_id: ''
     });
     const [showWarningModal, setShowWarningModal] = useState(false);
-    const [warningData, setWarningData] = useState({ excessAmount: 0 });
+    const [warningData, setWarningData] = useState({ type: '', amount: 0 });
     const [pendingTransaction, setPendingTransaction] = useState(null);
     const [notification, setNotification] = useState(null);
-    const [totalBalance, setTotalBalance] = useState(0); // New state for total balance
+    const [totalBalance, setTotalBalance] = useState(0);
 
     // Show notification with a message and type
     const showNotification = (message, type = 'success') => {
@@ -177,6 +180,20 @@ const TransactionsPage = () => {
         return { isExceeded: false };
     };
 
+    const checkInsufficientFunds = (amount, isEditing = false, originalAmount = 0) => {
+        /**
+         * Check if the expense amount exceeds the available balance.
+         */
+        const adjustedAmount = isEditing ? parseFloat(amount) - originalAmount : parseFloat(amount);
+        if (adjustedAmount > totalBalance) {
+            return {
+                isInsufficient: true,
+                amount: parseFloat(amount)
+            };
+        }
+        return { isInsufficient: false };
+    };
+
     // Handle form submission saving or updating
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -194,6 +211,20 @@ const TransactionsPage = () => {
             budget_id: editingTransaction ? editingTransaction.budget_id : parseInt(formData.budget_id)
         };
 
+        if (formData.type === 'expense') {
+            const fundsCheck = checkInsufficientFunds(
+                formData.amount,
+                !!editingTransaction,
+                editingTransaction?.amount || 0
+            );
+            if (fundsCheck.isInsufficient) {
+                setWarningData({ type: 'insufficient_funds', amount: fundsCheck.amount });
+                setPendingTransaction(transactionData);
+                setShowWarningModal(true);
+                return;
+            }
+        }
+
         if (formData.type === 'income') {
             const goalCheck = checkBudgetGoal(
                 transactionData.budget_id,
@@ -203,7 +234,7 @@ const TransactionsPage = () => {
             );
 
             if (goalCheck.isExceeded) {
-                setWarningData({ excessAmount: goalCheck.excessAmount });
+                setWarningData({ type: 'budget_exceeded', amount: goalCheck.excessAmount });
                 setPendingTransaction(transactionData);
                 setShowWarningModal(true);
                 return;
@@ -257,7 +288,7 @@ const TransactionsPage = () => {
             setEditingTransaction(null);
             setShowWarningModal(false);
             setPendingTransaction(null);
-            await Promise.all([fetchTransactions(), fetchTotalBalance()]); // Refresh balance after transaction
+            await Promise.all([fetchTransactions(), fetchTotalBalance()]);
         } catch (error) {
             console.error('Error saving transaction:', error);
             showNotification(error.response?.data?.message || 'Помилка при збереженні транзакції', 'error');
@@ -266,7 +297,7 @@ const TransactionsPage = () => {
 
     // Handle warning modal confirm and cancel actions
     const handleWarningConfirm = () => {
-        if (pendingTransaction) {
+        if (pendingTransaction && warningData.type === 'budget_exceeded') {
             submitTransaction(pendingTransaction);
         }
     };
@@ -301,7 +332,7 @@ const TransactionsPage = () => {
             );
             if (response.data.status === 'success') {
                 showNotification('Транзакція видалена успішно!');
-                await Promise.all([fetchTransactions(), fetchTotalBalance()]); // Refresh balance after deletion
+                await Promise.all([fetchTransactions(), fetchTotalBalance()]);
             }
         } catch (error) {
             console.error('Error deleting transaction:', error);
@@ -536,7 +567,7 @@ const TransactionsPage = () => {
                                     </div>
                                 </div>
                                 <div className="balance-amount">
-                                    {formatAmount(totalBalance)} {/* Use totalBalance from API */}
+                                    {formatAmount(totalBalance)}
                                 </div>
 
                                 <div className="balance-percentage">
@@ -678,9 +709,10 @@ const TransactionsPage = () => {
                     </div>
                 )}
 
-                <BudgetGoalWarningModal
+                <WarningModal
                     isOpen={showWarningModal}
-                    excessAmount={warningData.excessAmount}
+                    type={warningData.type}
+                    amount={warningData.amount}
                     onConfirm={handleWarningConfirm}
                     onCancel={handleWarningCancel}
                 />

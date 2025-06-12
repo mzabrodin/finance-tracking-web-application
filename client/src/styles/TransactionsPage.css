@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Cuprum:ital,wght@0,400..700;1,400..700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Oswald:wght@200..700&display=swap');
@@ -465,7 +466,8 @@
   background-color: #5a6268;
 }
 
-.transaction-form.warning-modal {
+/* Warning Modal */
+.transaction-form.warning-modal-pop {
   background: #fff;
   padding: 24px;
   border-radius: 10px;
@@ -476,7 +478,6 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   margin: auto;
   display: flex;
-  z-index: 200;
   flex-direction: column;
   align-items: center;
   animation: fadeIn 0.3s ease-out;
@@ -644,7 +645,7 @@
   .transaction-form.warning-modal-pop {
     padding: 20px;
     width: 90vw;
-    height: 200px;
+    min-height: 200px;
   }
 
   .warning-modal-pop .form-btn {
