@@ -1,18 +1,27 @@
+/**
+ * This file contains the TransactionsPage component,
+ */
+
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import Notification from '../components/Notification';
 import '../styles/TransactionsPage.css';
 import { API_URL } from '../config';
 
-const BudgetGoalWarningModal = ({ isOpen, warningType, amount, onConfirm, onCancel }) => {
+/**
+ * BudgetGoalWarningModal component to display a warning when budget goal is exceeded.
+ */
+const BudgetGoalWarningModal = ({ isOpen, excessAmount, onConfirm, onCancel }) => {
   if (!isOpen) return null;
 
+  /**
+   * Method to format the amount in UAH currency.
+   */
   const formatAmount = (amount) => {
     return new Intl.NumberFormat('uk-UA', {
       style: 'currency',
-      currency: 'UAH'
+      currency: 'UAH',
     }).format(amount);
   };
 
@@ -20,34 +29,44 @@ const BudgetGoalWarningModal = ({ isOpen, warningType, amount, onConfirm, onCanc
     <div className="transaction-modal">
       <div className="transaction-form warning-modal-pop">
         <h2>Попередження</h2>
-        <p>
-          {warningType === 'insufficient_funds'
-            ? `Недостатньо коштів: не вистачає ${formatAmount(amount)}`
-            : `Перевищення бюджету на ${formatAmount(amount)}`}
-        </p>
+        <p>Перевищення бюджету на {formatAmount(excessAmount)}</p>
         <div className="form-actions">
-          <button
-            type="button"
-            className="form-btn secondary"
-            onClick={onCancel}
-          >
+          <button type="button" className="form-btn secondary" onClick={onCancel}>
             Скасувати
           </button>
-          {warningType !== 'insufficient_funds' && (
-            <button
-              type="button"
-              className="form-btn primary"
-              onClick={onConfirm}
-            >
-              Продовжити
-            </button>
-          )}
+          <button type="button" className="form-btn primary" onClick={onConfirm}>
+            Продовжити
+          </button>
         </div>
       </div>
     </div>
   );
 };
 
+/**
+ * InsufficientFundsModal component to display a warning when budget balance is insufficient.
+ */
+const InsufficientFundsModal = ({ isOpen, message, onClose }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="transaction-modal">
+      <div className="transaction-form warning-modal-pop">
+        <h2>Попередження</h2>
+        <p>{message}</p>
+        <div className="form-actions">
+          <button type="button" className="form-btn secondary" onClick={onClose}>
+            Закрити
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * TransactionsPage component to manage and display transactions.
+ */
 const TransactionsPage = () => {
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -61,18 +80,21 @@ const TransactionsPage = () => {
     description: '',
     type: 'expense',
     category_id: '',
-    budget_id: ''
+    budget_id: '',
   });
   const [showWarningModal, setShowWarningModal] = useState(false);
-  const [warningData, setWarningData] = useState({ warningType: '', amount: 0 });
+  const [warningData, setWarningData] = useState({ excessAmount: 0 });
+  const [showInsufficientFundsModal, setShowInsufficientFundsModal] = useState(false);
+  const [insufficientFundsMessage, setInsufficientFundsMessage] = useState('');
   const [pendingTransaction, setPendingTransaction] = useState(null);
   const [notification, setNotification] = useState(null);
-  const navigate = useNavigate();
 
+  // Show notification with a message and type
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
   };
 
+  // Close the notification
   const closeNotification = () => {
     setNotification(null);
   };
@@ -128,50 +150,51 @@ const TransactionsPage = () => {
     fetchData();
   }, []);
 
-  const checkBudgetGoalAndBalance = (budgetId, newAmount, transactionType, isEditing = false, originalAmount = 0) => {
-    const amount = parseFloat(newAmount);
-    // Check balance for expenses
-    if (transactionType === 'expense') {
-      const totalIncome = transactions
-        .filter(t => t.type === 'income')
-        .reduce((sum, t) => sum + t.amount, 0);
-      const totalExpenses = transactions
-        .filter(t => t.type === 'expense')
-        .reduce((sum, t) => sum + t.amount, 0);
-      const currentBalance = totalIncome - totalExpenses;
-      const adjustedBalance = isEditing
-        ? currentBalance + originalAmount - amount
-        : currentBalance - amount;
-
-      if (adjustedBalance < 0) {
-        return {
-          isExceeded: true,
-          warningType: 'insufficient_funds',
-          amount: Math.abs(adjustedBalance)
-        };
-      }
-    }
-
-    // Check budget goal for incomes
-    const budget = budgets.find(b => b.id === parseInt(budgetId));
-    if (!budget || !budget.goal || transactionType !== 'income') return { isExceeded: false };
+  const checkBudgetGoal = (budgetId, newAmount, isEditing = false, originalAmount = 0) => {
+    const budget = budgets.find((b) => b.id === parseInt(budgetId));
+    if (!budget || !budget.goal) return { isExceeded: false };
 
     const budgetIncome = transactions
-      .filter(t => t.budget_id === parseInt(budgetId) && t.type === 'income')
+      .filter((t) => t.budget_id === parseInt(budgetId) && t.type === 'income')
       .reduce((sum, t) => sum + t.amount, 0);
 
     const adjustedIncome = isEditing
-      ? budgetIncome - originalAmount + amount
-      : budgetIncome + amount;
+      ? budgetIncome - originalAmount + parseFloat(newAmount)
+      : budgetIncome + parseFloat(newAmount);
 
     if (adjustedIncome > budget.goal) {
       return {
         isExceeded: true,
-        warningType: 'budget_exceeded',
-        amount: adjustedIncome - budget.goal
+        excessAmount: adjustedIncome - budget.goal,
       };
     }
     return { isExceeded: false };
+  };
+
+  const checkBudgetBalance = (budgetId, newAmount, isEditing = false, originalAmount = 0) => {
+    const budget = budgets.find((b) => b.id === parseInt(budgetId));
+    if (!budget) return { isInsufficient: false };
+
+    const budgetExpenses = transactions
+      .filter((t) => t.budget_id === parseInt(budgetId) && t.type === 'expense')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const budgetIncome = transactions
+      .filter((t) => t.budget_id === parseInt(budgetId) && t.type === 'income')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const currentBalance = budgetIncome - budgetExpenses;
+    const adjustedBalance = isEditing
+      ? currentBalance + originalAmount - parseFloat(newAmount)
+      : currentBalance - parseFloat(newAmount);
+
+    if (adjustedBalance < 0) {
+      return {
+        isInsufficient: true,
+        requiredAmount: Math.abs(adjustedBalance),
+      };
+    }
+    return { isInsufficient: false };
   };
 
   const handleSubmit = async (e) => {
@@ -187,22 +210,40 @@ const TransactionsPage = () => {
       description: formData.description || null,
       type: formData.type,
       category_id: parseInt(formData.category_id),
-      budget_id: editingTransaction ? editingTransaction.budget_id : parseInt(formData.budget_id)
+      budget_id: editingTransaction ? editingTransaction.budget_id : parseInt(formData.budget_id),
     };
 
-    const checkResult = checkBudgetGoalAndBalance(
-      transactionData.budget_id,
-      formData.amount,
-      formData.type,
-      !!editingTransaction,
-      editingTransaction?.amount || 0
-    );
+    if (formData.type === 'expense') {
+      const balanceCheck = checkBudgetBalance(
+        transactionData.budget_id,
+        formData.amount,
+        !!editingTransaction,
+        editingTransaction?.amount || 0
+      );
 
-    if (checkResult.isExceeded) {
-      setWarningData({ warningType: checkResult.warningType, amount: checkResult.amount });
-      setPendingTransaction(transactionData);
-      setShowWarningModal(true);
-      return;
+      if (balanceCheck.isInsufficient) {
+        setInsufficientFundsMessage(
+          `Недостатньо коштів у бюджеті. Потрібно ще ${formatAmount(balanceCheck.requiredAmount)}.`
+        );
+        setShowInsufficientFundsModal(true);
+        return;
+      }
+    }
+
+    if (formData.type === 'income') {
+      const goalCheck = checkBudgetGoal(
+        transactionData.budget_id,
+        formData.amount,
+        !!editingTransaction,
+        editingTransaction?.amount || 0
+      );
+
+      if (goalCheck.isExceeded) {
+        setWarningData({ excessAmount: goalCheck.excessAmount });
+        setPendingTransaction(transactionData);
+        setShowWarningModal(true);
+        return;
+      }
     }
 
     await submitTransaction(transactionData);
@@ -219,20 +260,16 @@ const TransactionsPage = () => {
         );
         if (response.data.status === 'success') {
           showNotification('Транзакція оновлена успішно!');
-          setTransactions(prev =>
-            prev.map(t =>
-              t.id === editingTransaction.id
-                ? { ...t, ...transactionData }
-                : t
+          setTransactions((prev) =>
+            prev.map((t) =>
+              t.id === editingTransaction.id ? { ...t, ...transactionData } : t
             )
           );
         }
       } else {
-        response = await axios.post(
-          `${API_URL}/api/transactions/`,
-          transactionData,
-          { withCredentials: true }
-        );
+        response = await axios.post(`${API_URL}/api/transactions/`, transactionData, {
+          withCredentials: true,
+        });
         if (response.data.status === 'success') {
           showNotification('Транзакція створена успішно!');
         }
@@ -243,11 +280,12 @@ const TransactionsPage = () => {
         description: '',
         type: 'expense',
         category_id: '',
-        budget_id: ''
+        budget_id: '',
       });
       setShowForm(false);
       setEditingTransaction(null);
       setShowWarningModal(false);
+      setShowInsufficientFundsModal(false);
       setPendingTransaction(null);
       await fetchTransactions();
     } catch (error) {
@@ -257,7 +295,7 @@ const TransactionsPage = () => {
   };
 
   const handleWarningConfirm = () => {
-    if (pendingTransaction && warningData.warningType === 'budget_exceeded') {
+    if (pendingTransaction) {
       submitTransaction(pendingTransaction);
     }
   };
@@ -274,17 +312,16 @@ const TransactionsPage = () => {
       description: transaction.description || '',
       type: transaction.type,
       category_id: transaction.category_id.toString(),
-      budget_id: transaction.budget_id.toString()
+      budget_id: transaction.budget_id.toString(),
     });
     setShowForm(true);
   };
 
   const handleDelete = async (transactionId) => {
     try {
-      const response = await axios.delete(
-        `${API_URL}/api/transactions/${transactionId}`,
-        { withCredentials: true }
-      );
+      const response = await axios.delete(`${API_URL}/api/transactions/${transactionId}`, {
+        withCredentials: true,
+      });
       if (response.data.status === 'success') {
         showNotification('Транзакція видалена успішно!');
         fetchTransactions();
@@ -296,12 +333,12 @@ const TransactionsPage = () => {
   };
 
   const getCategoryName = (categoryId) => {
-    const category = categories.find(cat => cat.id === categoryId);
+    const category = categories.find((cat) => cat.id === categoryId);
     return category ? category.name : 'Невідома категорія';
   };
 
   const getBudgetName = (budgetId) => {
-    const budget = budgets.find(b => b.id === budgetId);
+    const budget = budgets.find((b) => b.id === budgetId);
     return budget ? budget.name : 'Невідомий бюджет';
   };
 
@@ -311,35 +348,35 @@ const TransactionsPage = () => {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
   const formatAmount = (amount) => {
     return new Intl.NumberFormat('uk-UA', {
       style: 'currency',
-      currency: 'UAH'
+      currency: 'UAH',
     }).format(amount);
   };
 
   const totalIncome = transactions
-    .filter(t => t.type === 'income')
+    .filter((t) => t.type === 'income')
     .reduce((sum, t) => sum + t.amount, 0);
 
   const totalExpenses = transactions
-    .filter(t => t.type === 'expense')
+    .filter((t) => t.type === 'expense')
     .reduce((sum, t) => sum + t.amount, 0);
 
   const accountBalance = totalIncome - totalExpenses;
 
   const expenseRatio = totalIncome > 0 ? (totalExpenses / totalIncome) * 100 : 0;
 
-  const filteredTransactions = transactions.filter(transaction => {
+  const filteredTransactions = transactions.filter((transaction) => {
     if (activeTab === 'all') return true;
     return transaction.type === activeTab;
   });
 
-  const filteredCategories = categories.filter(category =>
+  const filteredCategories = categories.filter((category) =>
     formData.type === 'income' ? category.type === 'incomes' : category.type === 'expenses'
   );
 
@@ -351,15 +388,18 @@ const TransactionsPage = () => {
       description: '',
       type: 'expense',
       category_id: '',
-      budget_id: ''
+      budget_id: '',
     });
   };
 
   useEffect(() => {
     if (editingTransaction && formData.category_id) {
-      const selectedCategory = categories.find(cat => cat.id === parseInt(formData.category_id));
-      if (selectedCategory && selectedCategory.type !== (formData.type === 'income' ? 'incomes' : 'expenses')) {
-        setFormData(prev => ({ ...prev, category_id: '' }));
+      const selectedCategory = categories.find((cat) => cat.id === parseInt(formData.category_id));
+      if (
+        selectedCategory &&
+        selectedCategory.type !== (formData.type === 'income' ? 'incomes' : 'expenses')
+      ) {
+        setFormData((prev) => ({ ...prev, category_id: '' }));
       }
     }
   }, [formData.type, formData.category_id, editingTransaction, categories]);
@@ -397,7 +437,7 @@ const TransactionsPage = () => {
                   description: '',
                   type: 'expense',
                   category_id: '',
-                  budget_id: ''
+                  budget_id: '',
                 });
               }}
             >
@@ -475,9 +515,7 @@ const TransactionsPage = () => {
                               </span>
                             </td>
                             <td>
-                              <div className="transaction-date">
-                                {formatDate(transaction.created_at)}
-                              </div>
+                              <div className="transaction-date">{formatDate(transaction.created_at)}</div>
                             </td>
                             <td>
                               <div className="transaction-actions">
@@ -504,12 +542,7 @@ const TransactionsPage = () => {
                   )}
                 </div>
 
-                <button
-                  className="details-btn"
-                  onClick={() => navigate('/analytics')}
-                >
-                  ДЕТАЛЬНІШЕ
-                </button>
+                <button className="details-btn">ДЕТАЛЬНІШЕ</button>
               </div>
             </div>
 
@@ -521,17 +554,11 @@ const TransactionsPage = () => {
                     На рахунку:
                   </div>
                 </div>
-                <div className="balance-amount">
-                  {formatAmount(accountBalance)}
-                </div>
+                <div className="balance-amount">{formatAmount(accountBalance)}</div>
 
                 <div className="balance-percentage">
-                  <div className="balance-percentage-label">
-                    ВІДНОШЕННЯ ВИТРАТ І НАДХОДЖЕНЬ:
-                  </div>
-                  <div className="balance-percentage-value">
-                    {expenseRatio.toFixed(1)}%
-                  </div>
+                  <div className="balance-percentage-label">ВІДНОШЕННЯ ВИТРАТ І НАДХОДЖЕНЬ:</div>
+                  <div className="balance-percentage-value">{expenseRatio.toFixed(1)}%</div>
                 </div>
 
                 <div className="balance-stats">
@@ -540,9 +567,7 @@ const TransactionsPage = () => {
                       <i className="bx bx-trending-up"></i>
                       НАДХОДЖЕННЯ:
                     </div>
-                    <div className="balance-stat-value">
-                      {formatAmount(totalIncome)}
-                    </div>
+                    <div className="balance-stat-value">{formatAmount(totalIncome)}</div>
                   </div>
                 </div>
 
@@ -552,9 +577,7 @@ const TransactionsPage = () => {
                       <i className="bx bx-trending-down"></i>
                       ВИТРАТИ:
                     </div>
-                    <div className="balance-stat-value">
-                      {formatAmount(totalExpenses)}
-                    </div>
+                    <div className="balance-stat-value">{formatAmount(totalExpenses)}</div>
                   </div>
                 </div>
               </div>
@@ -565,9 +588,7 @@ const TransactionsPage = () => {
         {showForm && (
           <div className="transaction-modal">
             <div className="transaction-form">
-              <h2>
-                {editingTransaction ? 'Редагувати транзакцію' : 'Нова транзакція'}
-              </h2>
+              <h2>{editingTransaction ? 'Редагувати транзакцію' : 'Нова транзакція'}</h2>
               <form onSubmit={handleSubmit}>
                 <div className="form-group">
                   <label>Сума *</label>
@@ -577,7 +598,7 @@ const TransactionsPage = () => {
                     min="0"
                     max="1000000"
                     value={formData.amount}
-                    onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                     required
                   />
                 </div>
@@ -586,7 +607,7 @@ const TransactionsPage = () => {
                   <label>Опис</label>
                   <textarea
                     value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Введіть опис транзакції..."
                     rows="3"
                   />
@@ -597,7 +618,13 @@ const TransactionsPage = () => {
                     <label>Тип *</label>
                     <select
                       value={formData.type}
-                      onChange={(e) => setFormData({...formData, type: e.target.value, category_id: ''})}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          type: e.target.value,
+                          category_id: '',
+                        })
+                      }
                       required
                     >
                       <option value="expense">Витрата</option>
@@ -610,7 +637,7 @@ const TransactionsPage = () => {
                   <label>Категорія *</label>
                   <select
                     value={formData.category_id}
-                    onChange={(e) => setFormData({...formData, category_id: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
                     required
                   >
                     <option value="">Оберіть категорію</option>
@@ -627,7 +654,7 @@ const TransactionsPage = () => {
                     <label>Бюджет *</label>
                     <select
                       value={formData.budget_id}
-                      onChange={(e) => setFormData({...formData, budget_id: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, budget_id: e.target.value })}
                       required
                     >
                       <option value="">Оберіть бюджет</option>
@@ -641,17 +668,10 @@ const TransactionsPage = () => {
                 )}
 
                 <div className="form-actions">
-                  <button
-                    type="button"
-                    className="form-btn secondary"
-                    onClick={handleCancel}
-                  >
+                  <button type="button" className="form-btn secondary" onClick={handleCancel}>
                     Скасувати
                   </button>
-                  <button
-                    type="submit"
-                    className="form-btn primary"
-                  >
+                  <button type="submit" className="form-btn primary">
                     {editingTransaction ? 'Оновити' : 'Створити'}
                   </button>
                 </div>
@@ -662,10 +682,15 @@ const TransactionsPage = () => {
 
         <BudgetGoalWarningModal
           isOpen={showWarningModal}
-          warningType={warningData.warningType}
-          amount={warningData.amount}
+          excessAmount={warningData.excessAmount}
           onConfirm={handleWarningConfirm}
           onCancel={handleWarningCancel}
+        />
+
+        <InsufficientFundsModal
+          isOpen={showInsufficientFundsModal}
+          message={insufficientFundsMessage}
+          onClose={() => setShowInsufficientFundsModal(false)}
         />
 
         {notification && (
