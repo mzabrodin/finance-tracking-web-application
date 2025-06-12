@@ -2,12 +2,12 @@
  * This file contains ProfilePage component which allows users to view their profile information,
  */
 
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import {useNavigate} from 'react-router-dom';
-import {toast} from 'react-toastify';
-import {useAuth} from '../context/AuthContext';
-import {API_URL} from '../config';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../config';
 import Sidebar from '../components/Sidebar';
 import '../styles/ProfilePage.css';
 
@@ -15,7 +15,7 @@ import '../styles/ProfilePage.css';
  * ProfilePage component
  */
 function ProfilePage() {
-    const {user, changePassword} = useAuth();
+    const { user, changePassword } = useAuth();
     const [formData, setFormData] = useState({
         username: user?.username || '',
         new_password: ''
@@ -25,13 +25,13 @@ function ProfilePage() {
 
     useEffect(() => {
         if (user) {
-            setFormData({username: user.username, new_password: ''});
+            setFormData({ username: user.username, new_password: '' });
         }
     }, [user]);
 
     // Handle form input changes
     const handleChange = (e) => {
-        setFormData({...formData, [e.target.name]: e.target.value});
+        setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
     // Handle form submission for changing password
@@ -52,7 +52,7 @@ function ProfilePage() {
         // Fetch user balance from the API
         const fetchBalance = async () => {
             try {
-                const response = await axios.get(`${API_URL}/api/budgets/balance`, {withCredentials: true});
+                const response = await axios.get(`${API_URL}/api/budgets/balance`, { withCredentials: true });
                 setBalance(response.data.data.total_balance);
             } catch (error) {
                 throw error.response?.data || error;
@@ -67,15 +67,15 @@ function ProfilePage() {
 
     return (
         <div className="app-layout">
-            <Sidebar/>
+            <Sidebar />
             <div className="content-container">
-                <div class avatar-container="profile-container">
+                <div className="profile-container">
                     <h1>Профіль користувача</h1>
                     <p>Перегляд даних про користувача та зміна паролю</p>
                     <div className="profile-cards">
                         <div className="profile-card avatar-card">
                             <div className="avatar-placeholder">
-                                <i className="bx bx-user" style={{fontSize: '250px', color: ' #4a4a4a'}}></i>
+                                <i className="bx bx-user" style={{ fontSize: 'clamp(150px, 20vw, 200px)', color: '#4a4a4a' }}></i>
                             </div>
                         </div>
                         <div className="profile-card info-card">

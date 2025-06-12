@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Cuprum:ital,wght@0,400..700;1,400..700&display=swap');
 
+/* Desktop Sidebar */
 .sidebar {
   width: 18%;
   height: 100vh;
@@ -14,6 +15,7 @@
   top: 0;
   left: 0;
   transition: width 0.3s;
+  z-index: 1000;
 }
 
 .sidebar.collapsed {
@@ -162,4 +164,226 @@
 .sidebar-section ul li a.active {
   color: #00aaff;
   font-weight: bold;
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
+
+  .mobile-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background-color: #333;
+    color: #ffffff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    z-index: 1001;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  }
+
+  .mobile-header h2 {
+    font-family: 'Black Han Sans', sans-serif;
+    font-weight: 400;
+    font-size: 24px;
+    color: #fff;
+    margin: 0;
+  }
+
+  .mobile-toggle-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 28px;
+    cursor: pointer;
+    padding: 5px;
+  }
+
+  .mobile-menu-overlay {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    width: 100%;
+    height: calc(100vh - 60px);
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  .mobile-menu {
+    width: 100%;
+    max-width: 500px;
+    background-color: #333;
+    color: #ffffff;
+    padding: 20px 0;
+    margin: 0 20px;
+    border-radius: 0 0 10px 10px;
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+    animation: slideDown 0.3s ease-out;
+  }
+
+  @keyframes slideDown {
+    from {
+      transform: translateY(-20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .mobile-menu-content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mobile-menu-section {
+    margin-bottom: 20px;
+  }
+
+  .mobile-menu-section h3 {
+    font-family: "Cuprum", sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: #fff;
+    text-transform: uppercase;
+    padding: 0 20px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 5px;
+  }
+
+  .mobile-menu-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .mobile-menu-section ul li {
+    padding: 0;
+    margin: 0;
+  }
+
+  .mobile-menu-section ul li a {
+    font-family: "Cuprum", sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: #fff;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    transition: background-color 0.3s;
+  }
+
+  .mobile-menu-section ul li a:hover {
+    background-color: rgba(217, 217, 217, 0.33);
+  }
+
+  .mobile-menu-section ul li a i {
+    font-size: 18px;
+    margin-right: 12px;
+    width: 20px;
+    text-align: center;
+  }
+
+  .mobile-menu-footer {
+    margin-top: auto;
+    padding: 10px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .mobile-menu-footer .logout-btn {
+    width: 100%;
+    padding: 12px 0;
+    background-color: transparent;
+    font-family: "Cuprum", sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: #fff;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s, color 0.3s;
+    border-radius: 6px;
+  }
+
+  .mobile-menu-footer .logout-btn:hover {
+    background-color: #ff4d4d;
+    color: #ffffff;
+  }
+
+  .mobile-menu-footer .logout-btn i {
+    margin-right: 8px;
+  }
+}
+
+/* Tablet Styles */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .sidebar {
+    width: 22%;
+  }
+
+  .sidebar.collapsed {
+    width: 70px;
+  }
+
+  .sidebar-header h2 {
+    font-size: 28px;
+  }
+
+  .sidebar-section h3 {
+    font-size: 18px;
+  }
+
+  .sidebar-section ul li a {
+    font-size: 16px;
+  }
+
+  .logout-btn {
+    font-size: 18px;
+  }
+}
+
+/* Large Desktop Styles */
+@media (min-width: 1400px) {
+  .sidebar {
+    width: 19%;
+  }
+}
+
+/* Очень маленькие экраны */
+@media (max-width: 480px) {
+  .mobile-header h2 {
+    font-size: 20px;
+  }
+
+  .mobile-menu {
+    margin: 0 10px;
+  }
+
+  .mobile-menu-section h3 {
+    font-size: 16px;
+  }
+
+  .mobile-menu-section ul li a {
+    font-size: 14px;
+    padding: 10px 15px;
+  }
+
+  .mobile-menu-footer .logout-btn {
+    font-size: 16px;
+  }
 }

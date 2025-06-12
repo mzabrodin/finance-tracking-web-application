@@ -12,6 +12,7 @@
 .app-layout {
   display: flex;
   min-height: 100vh;
+  flex-direction: row;
 }
 
 .content-container {
@@ -21,6 +22,7 @@
   padding: 40px;
   position: relative;
   transition: margin-left 0.3s;
+  min-width: 0; /* Важливо для флекс-контейнерів */
 }
 
 .sidebar.collapsed ~ .content-container {
@@ -30,6 +32,7 @@
 .categories-container {
   max-width: 1200px;
   margin: 0 auto;
+  width: 100%;
 }
 
 h1 {
@@ -43,15 +46,20 @@ h1 {
 
 .categories-layout {
   width: 100%;
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
 }
 
 .categories-table {
-  width: 70%;
+  flex: 1;
+  min-width: 0;
   overflow-x: auto;
 }
 
 .categories-table table {
   width: 100%;
+  min-width: 600px;
   border-collapse: collapse;
   background: #fff;
   box-shadow: 0 2px 12px 1px rgba(61, 61, 61, 0.25);
@@ -62,6 +70,7 @@ h1 {
   padding: 15px;
   text-align: left;
   border-bottom: 1px solid #ddd;
+  white-space: nowrap;
 }
 
 .categories-table th {
@@ -90,7 +99,7 @@ h1 {
 }
 
 .categories-table .edit-icon:hover {
-  color: #333;
+  color: #007bff;
 }
 
 .categories-table .delete-icon {
@@ -98,13 +107,14 @@ h1 {
 }
 
 .categories-table .delete-icon:hover {
-  color: #333;
+  color: #dc3545;
 }
 
 .filter-buttons {
   display: flex;
   gap: 10px;
   margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
 .filter-button {
@@ -128,22 +138,16 @@ h1 {
 }
 
 .new-category-form {
-  width: 420px;
-  height: 400px;
+  width: 350px;
+  min-width: 320px;
   background: #fff;
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 2px 12px 1px rgba(61, 61, 61, 0.25);
-  position: fixed;
-  top: 320px;
-  right: 40px;
-  transform: translateY(-50%);
-  z-index: 10;
-  transition: width 0.3s ease;
-}
-
-.sidebar:not(.collapsed) ~ .content-container .new-category-form {
-  width: 320px;
+  flex-shrink: 0;
+  align-self: flex-start;
+  position: sticky;
+  top: 20px;
 }
 
 .new-category-form h2 {
@@ -167,7 +171,8 @@ h1 {
   margin-bottom: -10px;
 }
 
-.new-category-form input {
+.new-category-form input,
+.new-category-form select {
   width: 100%;
   padding: 10px;
   border: 1px solid #ddd;
@@ -205,17 +210,21 @@ h1 {
   background-color: #555;
 }
 
-select {
-  width: 100%;
-  padding: 8px;
-  margin-bottom: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
 .categories-table th:nth-child(2),
 .categories-table td:nth-child(2) {
-  width: 20%;
+  width: 15%;
+}
+
+.categories-table th:nth-child(3),
+.categories-table td:nth-child(3) {
+  width: 40%;
+  white-space: normal;
+}
+
+.categories-table th:nth-child(4),
+.categories-table td:nth-child(4) {
+  width: 15%;
+  text-align: center;
 }
 
 .error-text {
@@ -224,4 +233,294 @@ select {
   font-size: 14px;
   margin-top: -10px;
   margin-bottom: 10px;
+}
+
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 12px;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+/* Адаптивні стилі */
+
+/* Великі екрани (1400px і більше) */
+@media (min-width: 1400px) {
+  .new-category-form {
+    width: 400px;
+  }
+}
+
+/* Середні десктопи (1200px - 1399px) */
+@media (max-width: 1399px) {
+  .new-category-form {
+    width: 320px;
+  }
+}
+
+/* Маленькі десктопи та великі планшети (992px - 1199px) */
+@media (max-width: 1199px) {
+  .content-container {
+    padding: 30px 20px;
+  }
+
+  .categories-layout {
+    gap: 15px;
+  }
+
+  .new-category-form {
+    width: 300px;
+    min-width: 280px;
+  }
+}
+
+/* Планшети (768px - 991px) */
+@media (max-width: 991px) {
+  .app-layout {
+    flex-direction: column;
+  }
+
+  .content-container {
+    margin-left: 0;
+    padding: 20px 15px;
+  }
+
+  .sidebar.collapsed ~ .content-container {
+    margin-left: 0;
+  }
+
+  .categories-layout {
+    flex-direction: column;
+    gap: 30px;
+  }
+
+  .categories-table {
+    width: 100%;
+  }
+
+  .new-category-form {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    position: static;
+    top: auto;
+  }
+}
+
+/* Маленькі планшети (576px - 767px) */
+@media (max-width: 767px) {
+  h1 {
+    font-size: 32px;
+    margin-bottom: 15px;
+    text-align: center;
+  }
+
+  .filter-buttons {
+    justify-content: center;
+    margin-bottom: 15px;
+  }
+
+  .filter-button {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+
+  .categories-table table {
+    min-width: 500px;
+  }
+
+  .categories-table th,
+  .categories-table td {
+    padding: 12px 8px;
+    font-size: 14px;
+  }
+
+  .categories-table th {
+    font-size: 16px;
+  }
+
+  .new-category-form {
+    padding: 15px;
+  }
+
+  .new-category-form h2 {
+    font-size: 20px;
+  }
+}
+
+/* Мобільні телефони (до 575px) */
+@media (max-width: 575px) {
+  .content-container {
+    padding: 15px 10px;
+  }
+
+  h1 {
+    font-size: 28px;
+  }
+
+  .filter-buttons {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .filter-button {
+    width: 100%;
+    max-width: 200px;
+    padding: 10px 20px;
+  }
+
+  .categories-table table {
+    min-width: 400px;
+  }
+
+  .categories-table th:nth-child(3),
+  .categories-table td:nth-child(3) {
+    display: none; /* Приховуємо опис на дуже маленьких екранах */
+  }
+
+  .categories-table th,
+  .categories-table td {
+    padding: 10px 6px;
+    font-size: 13px;
+  }
+
+  .categories-table th {
+    font-size: 15px;
+  }
+
+  .categories-table .edit-icon,
+  .categories-table .delete-icon {
+    font-size: 18px;
+    margin-right: 8px;
+  }
+
+  .new-category-form {
+    margin: 0 5px;
+    padding: 15px;
+  }
+
+  .new-category-form h2 {
+    font-size: 18px;
+    margin-bottom: 15px;
+  }
+
+  .new-category-form form {
+    gap: 12px;
+  }
+
+  .new-category-form label {
+    font-size: 14px;
+  }
+
+  .new-category-form input,
+  .new-category-form select {
+    padding: 8px;
+    font-size: 14px;
+  }
+
+  .new-category-form .form-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .new-category-form button {
+    padding: 12px;
+    font-size: 14px;
+  }
+}
+
+/* Дуже маленькі екрани (до 360px) */
+@media (max-width: 359px) {
+  h1 {
+    font-size: 24px;
+  }
+
+  .categories-table table {
+    min-width: 320px;
+  }
+
+  .categories-table th:nth-child(2),
+  .categories-table td:nth-child(2) {
+    width: 25%;
+  }
+
+  .categories-table th,
+  .categories-table td {
+    padding: 8px 4px;
+    font-size: 12px;
+  }
+
+  .categories-table th {
+    font-size: 14px;
+  }
+
+  .new-category-form {
+    margin: 0 2px;
+    padding: 12px;
+  }
+}
+
+/* Горизонтальна орієнтація на планшетах */
+@media (max-height: 600px) and (orientation: landscape) and (min-width: 768px) {
+  .categories-layout {
+    flex-direction: row;
+    gap: 20px;
+  }
+
+  .new-category-form {
+    width: 300px;
+    max-height: 400px;
+    overflow-y: auto;
+    position: sticky;
+    top: 10px;
+  }
+
+  h1 {
+    font-size: 28px;
+    margin-bottom: 15px;
+  }
+}
+
+/* Горизонтальна орієнтація на мобільних */
+@media (max-height: 500px) and (orientation: landscape) and (max-width: 767px) {
+  .content-container {
+    padding: 10px;
+  }
+
+  h1 {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+
+  .categories-layout {
+    flex-direction: row;
+    gap: 15px;
+  }
+
+  .categories-table {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .new-category-form {
+    width: 280px;
+    min-width: 250px;
+    max-height: 350px;
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+
+  .filter-buttons {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 5px;
+  }
+
+  .filter-button {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
 }

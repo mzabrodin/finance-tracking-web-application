@@ -16,6 +16,19 @@ const CategoriesPage = () => {
     const [editingCategory, setEditingCategory] = useState(null);
     const [newCategory, setNewCategory] = useState({name: '', description: '', type: ''});
     const [formErrors, setFormErrors] = useState({});
+    const [isMobile, setIsMobile] = useState(false);
+
+    // Check if device is mobile
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth <= 991);
+        };
+
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     // Function to make API calls
     const apiCall = async (url, options = {}) => {
@@ -123,6 +136,16 @@ const CategoriesPage = () => {
             type: category?.type || '',
         });
         setFormErrors({});
+
+        // Scroll to form on mobile
+        if (isMobile) {
+            setTimeout(() => {
+                const formElement = document.querySelector('.new-category-form');
+                if (formElement) {
+                    formElement.scrollIntoView({ behavior: 'smooth' });
+                }
+            }, 100);
+        }
     };
 
     // Handler for canceling edit
@@ -144,6 +167,14 @@ const CategoriesPage = () => {
             setNewCategory((prev) => ({
                 ...prev,
                 [name]: value,
+            }));
+        }
+
+        // Clear specific error when user starts typing
+        if (formErrors[name]) {
+            setFormErrors((prev) => ({
+                ...prev,
+                [name]: ''
             }));
         }
     };
@@ -176,6 +207,16 @@ const CategoriesPage = () => {
             }
 
             handleCancelEdit();
+
+            // Scroll to table on mobile after adding/updating
+            if (isMobile) {
+                setTimeout(() => {
+                    const tableElement = document.querySelector('.categories-table');
+                    if (tableElement) {
+                        tableElement.scrollIntoView({ behavior: 'smooth' });
+                    }
+                }, 100);
+            }
         } catch (err) {
             setError(err.message);
         }
@@ -183,9 +224,9 @@ const CategoriesPage = () => {
 
     // Handler for deleting a category
     const handleDeleteCategory = async (id) => {
-//    if (!window.confirm('Ви впевнені, що хочете видалити цю категорію?')) {
-//      return;
-//    }
+        if (!window.confirm('Ви впевнені, що хочете видалити цю категорію?')) {
+            return;
+        }
 
         try {
             await deleteCategory(id);
@@ -203,6 +244,106 @@ const CategoriesPage = () => {
         );
     }
 
+    const renderCategoriesTable = () => (
+        <div className="categories-table">
+            <table>
+                <thead>
+                <tr>
+                    <th>НАЗВА</th>
+                    <th>ТИП</th>
+                    {!isMobile && <th>ОПИС</th>}
+                    <th>ДІЇ</th>
+                </tr>
+                </thead>
+                <tbody>
+                {filteredCategories.length === 0 ? (
+                    <tr>
+                        <td colSpan={isMobile ? 3 : 4} style={{textAlign: 'center', padding: '20px'}}>
+                            {filterType === 'all' ? 'Немає категорій' :
+                             filterType === 'incomes' ? 'Немає категорій доходів' :
+                             'Немає категорій витрат'}
+                        </td>
+                    </tr>
+                ) : (
+                    filteredCategories.map((cat) => (
+                        <tr key={cat.id}>
+                            <td>{cat.name}</td>
+                            <td>{cat.type === 'incomes' ? 'Доходи' : 'Витрати'}</td>
+                            {!isMobile && <td>{cat.description || '-'}</td>}
+                            <td>
+                                <i
+                                    className="bx bx-edit edit-icon"
+                                    onClick={() => handleEditCategory(cat)}
+                                    title="Редагувати"
+                                ></i>
+                                <i
+                                    className="bx bx-trash delete-icon"
+                                    onClick={() => handleDeleteCategory(cat.id)}
+                                    title="Видалити"
+                                ></i>
+                            </td>
+                        </tr>
+                    ))
+                )}
+                </tbody>
+            </table>
+        </div>
+    );
+
+    const renderCategoryForm = () => (
+        <div className="new-category-form">
+            <h2>{editingCategory ? 'РЕДАГУВАТИ КАТЕГОРІЮ' : 'НОВА КАТЕГОРІЯ'}</h2>
+            <form onSubmit={handleAddCategory}>
+                <label>НАЗВА</label>
+                <input
+                    type="text"
+                    name="name"
+                    value={editingCategory ? editingCategory.name : newCategory.name}
+                    onChange={handleInputChange}
+                    placeholder="Введіть назву категорії"
+                    autoComplete="off"
+                />
+                {formErrors.name && <div className="error-text">{formErrors.name}</div>}
+
+                {!editingCategory && (
+                    <>
+                        <label>ТИП</label>
+                        <select
+                            name="type"
+                            value={newCategory.type}
+                            onChange={handleInputChange}
+                        >
+                            <option value="">Оберіть тип</option>
+                            <option value="incomes">Доходи</option>
+                            <option value="expenses">Витрати</option>
+                        </select>
+                        {formErrors.type && <div className="error-text">{formErrors.type}</div>}
+                    </>
+                )}
+
+                <label>ОПИС</label>
+                <input
+                    type="text"
+                    name="description"
+                    value={editingCategory ? editingCategory.description || '' : newCategory.description}
+                    onChange={handleInputChange}
+                    placeholder="Введіть опис (необов'язково)"
+                    autoComplete="off"
+                />
+                {formErrors.description && <div className="error-text">{formErrors.description}</div>}
+
+                <div className="form-buttons">
+                    <button type="submit">{editingCategory ? 'Оновити' : 'ДОДАТИ'}</button>
+                    {editingCategory && (
+                        <button type="button" className="cancel-button" onClick={handleCancelEdit}>
+                            Скасувати
+                        </button>
+                    )}
+                </div>
+            </form>
+        </div>
+    );
+
     return (
         <div className="app-layout">
             <Sidebar/>
@@ -210,108 +351,32 @@ const CategoriesPage = () => {
                 <div className="categories-container">
                     <h1>КАТЕГОРІЇ</h1>
                     {error && <div className="error-message">{error}</div>}
+
                     <div className="filter-buttons">
                         <button
                             className={`filter-button ${filterType === 'all' ? 'active' : ''}`}
                             onClick={() => setFilterType('all')}
                         >
-                            Усі
+                            Усі ({categories.length})
                         </button>
                         <button
                             className={`filter-button ${filterType === 'incomes' ? 'active' : ''}`}
                             onClick={() => setFilterType('incomes')}
                         >
-                            Доходи
+                            Доходи ({categories.filter(cat => cat.type === 'incomes').length})
                         </button>
                         <button
                             className={`filter-button ${filterType === 'expenses' ? 'active' : ''}`}
                             onClick={() => setFilterType('expenses')}
                         >
-                            Витрати
+                            Витрати ({categories.filter(cat => cat.type === 'expenses').length})
                         </button>
                     </div>
+
                     <div className="categories-layout">
-                        <div className="categories-table">
-                            <table>
-                                <thead>
-                                <tr>
-                                    <th>НАЗВА</th>
-                                    <th>ТИП</th>
-                                    <th>ОПИС</th>
-                                    <th>ДІЇ</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {filteredCategories.map((cat) => (
-                                    <tr key={cat.id}>
-                                        <td>{cat.name}</td>
-                                        <td>{cat.type === 'incomes' ? 'Доходи' : 'Витрати'}</td>
-                                        <td>{cat.description}</td>
-                                        <td>
-                                            <i
-                                                className="bx bx-edit edit-icon"
-                                                onClick={() => handleEditCategory(cat)}
-                                            ></i>
-                                            <i
-                                                className="bx bx-trash delete-icon"
-                                                onClick={() => handleDeleteCategory(cat.id)}
-                                            ></i>
-                                        </td>
-                                    </tr>
-                                ))}
-                                </tbody>
-                            </table>
-                        </div>
+                        {renderCategoriesTable()}
+                        {renderCategoryForm()}
                     </div>
-                </div>
-                <div className="new-category-form">
-                    <h2>{editingCategory ? 'РЕДАГУВАТИ КАТЕГОРІЮ' : 'НОВА КАТЕГОРІЯ'}</h2>
-                    <form onSubmit={handleAddCategory}>
-                        <label>НАЗВА</label>
-                        <input
-                            type="text"
-                            name="name"
-                            value={editingCategory ? editingCategory.name : newCategory.name}
-                            onChange={handleInputChange}
-                            placeholder=""
-                        />
-                        {formErrors.name && <div className="error-text">{formErrors.name}</div>}
-
-                        {!editingCategory && (
-                            <>
-                                <label>ТИП</label>
-                                <select
-                                    name="type"
-                                    value={newCategory.type}
-                                    onChange={handleInputChange}
-                                >
-                                    <option value="">Оберіть тип</option>
-                                    <option value="incomes">Доходи</option>
-                                    <option value="expenses">Витрати</option>
-                                </select>
-                                {formErrors.type && <div className="error-text">{formErrors.type}</div>}
-                            </>
-                        )}
-
-                        <label>ОПИС</label>
-                        <input
-                            type="text"
-                            name="description"
-                            value={editingCategory ? editingCategory.description || '' : newCategory.description}
-                            onChange={handleInputChange}
-                            placeholder=""
-                        />
-                        {formErrors.description && <div className="error-text">{formErrors.description}</div>}
-
-                        <div className="form-buttons">
-                            <button type="submit">{editingCategory ? 'Оновити' : 'ДОДАТИ'}</button>
-                            {editingCategory && (
-                                <button type="button" className="cancel-button" onClick={handleCancelEdit}>
-                                    Скасувати
-                                </button>
-                            )}
-                        </div>
-                    </form>
                 </div>
             </div>
         </div>
