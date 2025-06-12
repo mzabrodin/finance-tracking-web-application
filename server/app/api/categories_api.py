@@ -11,6 +11,7 @@ from app.utils.decorators import logged_in_required
 from app.utils.extensions import db
 from app.utils.responses import create_response
 
+
 categories = Blueprint('categories', __name__)
 """Blueprint for category management API endpoints."""
 
