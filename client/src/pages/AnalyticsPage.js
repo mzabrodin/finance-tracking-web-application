@@ -774,7 +774,11 @@ const AnalyticsPage = () => {
                                         <XAxis dataKey="month"/>
                                         <YAxis/>
                                         <Tooltip
-                                            formatter={(value) => [formatAmount(value), '']}
+                                            formatter={(value, name) => {
+              if (name === "Доходи") return [`Доходи: ${formatAmount(value)}`, ''];
+              if (name === "Витрати") return [`Витрати: ${formatAmount(value)}`, ''];
+              return [formatAmount(value), ''];
+            }}
                                             labelFormatter={(label) => `Місяць: ${label}`}
                                         />
                                         <Line type="monotone" dataKey="income" stroke="#00C49F" strokeWidth={3}
@@ -829,7 +833,12 @@ const AnalyticsPage = () => {
                                         <CartesianGrid strokeDasharray="3 3"/>
                                         <XAxis dataKey="name"/>
                                         <YAxis/>
-                                        <Tooltip formatter={(value) => [formatAmount(value), '']}/>
+                                        <Tooltip
+                                      formatter={(value, name) => {
+                                          if (name === "Доходи") return [`Доходи: ${formatAmount(value)}`, ''];
+                                          if (name === "Витрати") return [`Витрати: ${formatAmount(value)}`, ''];
+                                          return [formatAmount(value), ''];
+                                        }}/>
                                         <Bar dataKey="income" fill="#00C49F" name="Доходи"/>
                                         <Bar dataKey="expenses" fill="#FF8042" name="Витрати"/>
                                     </BarChart>
