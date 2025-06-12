@@ -532,7 +532,7 @@ const BudgetApp = () => {
                                         </div>
                                         <div className="card-details">
                                             <p>Ціль: {budget.goal ? formatCurrency(budget.goal) : '—'}</p>
-                                            <p>ЗБРАНО: {formatCurrency(budget.current)}</p>
+                                            <p>Зібрано: {formatCurrency(budget.current)}</p>
                                         </div>
                                         <button
                                             onClick={() => setSelectedBudget(budget)}
