@@ -156,7 +156,7 @@ function AuthPage() {
                 errorMessage.includes('already exists') ||
                 errorMessage.includes('User already exists') ||
                 errorMessage.toLowerCase().includes('duplicate')) {
-                showNotification('Користувач з такою електронною поштою вже зареєстрований. Спробуйте увійти або використайте іншу пошту.', 'error');
+                showNotification('Користувач з такою електронною поштою або ніком вже зареєстрований. Спробуйте увійти або використайте іншу пошту/нік.', 'error');
             } else if (errorMessage.includes('Невірний') ||
                        errorMessage.includes('Invalid') ||
                        errorMessage.includes('incorrect')) {
