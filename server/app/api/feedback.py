@@ -205,7 +205,6 @@ def submit_feedback():
         try:
             validated_data = FeedbackSchema(**data)
         except ValidationError as e:
-            print(f"Помилка валідації: {e.errors()}")
             return create_response(
                 status_code=400,
                 message='Неправильні дані форми',
@@ -228,7 +227,6 @@ def submit_feedback():
         )
 
     except Exception as e:
-        print(f"Загальна помилка в feedback: {str(e)}")
         return create_response(
             status_code=500,
             message='Внутрішня помилка сервера',
