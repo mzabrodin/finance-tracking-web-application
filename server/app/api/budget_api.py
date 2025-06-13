@@ -136,7 +136,7 @@ def create_budget() -> tuple[Response, int] | Response:
     except Exception as e:
         return create_response(
             status_code=500,
-            message='Помілка сервера',
+            message='Помилка сервера',
             details=str(e)
         )
 

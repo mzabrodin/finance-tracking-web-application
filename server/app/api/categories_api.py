@@ -11,7 +11,6 @@ from app.utils.decorators import logged_in_required
 from app.utils.extensions import db
 from app.utils.responses import create_response
 
-
 categories = Blueprint('categories', __name__)
 """Blueprint for category management API endpoints."""
 
@@ -154,7 +153,7 @@ def delete_category(category_id: int) -> tuple[Response, int]:
     if not category:
         return create_response(404, 'Категорію не знайдено або доступ заборонено')
 
-    transactions_exist = Transaction.query.filter_by(category_id = category_id).first()
+    transactions_exist = Transaction.query.filter_by(category_id=category_id).first()
     if transactions_exist:
         return create_response(400, 'Не можливо видалити категорію, оскільки вона містить транзакції')
 

@@ -6,8 +6,8 @@ from flask_jwt_extended import create_access_token, set_access_cookies, unset_jw
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.models.user_model import User
 from app.models.category_model import Category
+from app.models.user_model import User
 from app.schemas.user_schemas import UserRegisterSchema, UserLoginSchema, UserChangePasswordSchema
 from app.utils.decorators import logged_in_required
 from app.utils.extensions import db, jwt
@@ -16,17 +16,13 @@ from app.utils.responses import create_response
 auth = Blueprint('auth', __name__)
 """Authentication API Blueprint."""
 
-
-# Дефолтні категорії, які створюються для кожного нового користувача
 DEFAULT_CATEGORIES = [
-    # Категорії доходів
     {"name": "Зарплата", "description": "Основний дохід від роботи", "type": "incomes"},
     {"name": "Фріланс", "description": "Додатковий дохід від проектів", "type": "incomes"},
     {"name": "Інвестиції", "description": "Прибуток від інвестицій", "type": "incomes"},
     {"name": "Подарунки", "description": "Отримані подарунки та грошові кошти", "type": "incomes"},
     {"name": "Інше", "description": "Інші джерела доходу", "type": "incomes"},
 
-    # Категорії витрат
     {"name": "Продукти", "description": "Витрати на їжу та продукти харчування", "type": "expenses"},
     {"name": "Транспорт", "description": "Витрати на транспорт та пальне", "type": "expenses"},
     {"name": "Житло", "description": "Оренда, комунальні послуги", "type": "expenses"},
@@ -36,16 +32,17 @@ DEFAULT_CATEGORIES = [
     {"name": "Освіта", "description": "Курси, книги, навчання", "type": "expenses"},
     {"name": "Інше", "description": "Інші витрати", "type": "expenses"}
 ]
+"""Default categories to be created for new users."""
 
 
 def create_default_categories(user_id: int) -> bool:
-    """Створює дефолтні категорії для нового користувача.
+    """Create default categories for a new user.
 
     Args:
-        user_id (int): ID користувача для якого створюються категорії
+        user_id (int): The ID of the user for whom the categories are being created.
 
     Returns:
-        bool: True якщо категорії створені успішно, False - якщо сталася помилка
+        bool: True if execution was successful, False if an error occurred.
     """
     try:
         for category_data in DEFAULT_CATEGORIES:
@@ -57,12 +54,10 @@ def create_default_categories(user_id: int) -> bool:
             )
             db.session.add(category)
 
-        # Зберігаємо всі категорії одразу
-        db.session.flush()  # Використовуємо flush замість commit для збереження в рамках транзакції
+        db.session.flush()
         return True
 
     except SQLAlchemyError:
-        # У разі помилки, rollback буде виконано в основній функції
         return False
 
 
@@ -87,7 +82,7 @@ def register() -> tuple[Response, int] | Response:
     """Endpoint for user registration.
 
     This endpoint allows new users to register by providing a username, email, password, and user type.
-    Additionally, it creates default categories for the new user.
+    Additionally, it creates default categories for the new user and a default budget.
 
     Provided data should be in JSON format with the following fields:
         - username (str): The desired username for the new user, must be unique and be in the range of 3 to 50 characters.
@@ -135,7 +130,6 @@ def register() -> tuple[Response, int] | Response:
             )
 
     try:
-        # Створюємо користувача
         user = User(
             username=validated_data.username,
             email=validated_data.email,
@@ -143,20 +137,16 @@ def register() -> tuple[Response, int] | Response:
             user_type=validated_data.user_type
         )
         db.session.add(user)
-        db.session.flush()  # Зберігаємо користувача, щоб отримати ID
+        db.session.flush()
 
-        # Створюємо дефолтні категорії
-        categories_created = create_default_categories(user.id)
+        default_records = create_default_categories(user.id)
 
-        if not categories_created:
-            # Якщо категорії не створились, відкатуємо всю транзакцію
+        if not default_records:
             db.session.rollback()
             return create_response(
                 status_code=500,
-                message='Помилка створення дефолтних категорій'
+                message='Помилка створення дефолтних категорій або бюджету'
             )
-
-        # Якщо все успішно, підтверджуємо транзакцію
         db.session.commit()
 
     except SQLAlchemyError as e:
