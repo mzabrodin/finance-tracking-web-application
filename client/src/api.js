@@ -3,7 +3,7 @@ import {API_URL} from '../config';
 
 const api = axios.create({
     baseURL: API_URL,
-    withCredentials: true, // Для надсилання кук із JWT
+    withCredentials: true,
 });
 
 export const login = async (email, password) => {

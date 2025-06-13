@@ -7,7 +7,7 @@ import {useAuth} from '../context/AuthContext';
 import {useNavigate, useLocation} from 'react-router-dom';
 import '../styles/AuthPage.css';
 
-// Компонент сповіщення
+// Notification component to display messages
 const Notification = ({ message, type, onClose }) => {
     React.useEffect(() => {
         const timer = setTimeout(() => {
@@ -107,12 +107,12 @@ function AuthPage() {
 
     const isLogin = location.pathname === '/auth';
 
-    // Функція для показу сповіщення
+    // For showing notifications
     const showNotification = (message, type) => {
         setNotification({ message, type });
     };
 
-    // Функція для закриття сповіщення
+    // For closing notifications
     const closeNotification = () => {
         setNotification(null);
     };
@@ -151,7 +151,7 @@ function AuthPage() {
         } catch (error) {
             const errorMessage = error.response?.data?.message || error.message || 'Помилка автентифікації';
 
-            // Специфічна обробка для різних типів помилок
+            // Error handling with specific messages
             if (errorMessage.includes('вже існує') ||
                 errorMessage.includes('already exists') ||
                 errorMessage.includes('User already exists') ||
@@ -176,7 +176,7 @@ function AuthPage() {
         } else {
             navigate('/auth');
         }
-        // Очищення форми при перемиканні
+        // Form reset
         setEmail('');
         setPassword('');
         setUsername('');
